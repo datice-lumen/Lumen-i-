@@ -10,8 +10,8 @@ Develop a reliable and fair machine learning model that classifies skin lesions 
 
 1. Environment Setup & Configuration
    - [1.1 Installing Dependencies](#11-installing-dependencies)
-   - 1.2 Using `default.yaml` Configuration File  
-   - 1.3 Dataset Placement and Folder Structure  
+   - [1.2 Using `default.yaml` Configuration File](#12-using-defaultyaml-configuration-file)
+   - [1.3 Dataset Placement and Folder Structure](#13-dataset-placement-and-folder-structure)
 
 2. Training Pipeline
    - 2.1 Launching Training from Script  
@@ -36,6 +36,7 @@ Develop a reliable and fair machine learning model that classifies skin lesions 
    - 7.1 [Project Report](reports/project_documentation.pdf)  
    - 7.2 [Technical Documentation](reports/technical_documentation.pdf)
 
+## 1. Environment Setup & Configuration
 
 ### 1.1 Installing Dependencies
 
@@ -45,4 +46,9 @@ To install all necessary dependencies, run:
 
 ```bash
 pip install -r requirements.txt
+```
+
+## 1.2 Using `default.yaml` Configuration File
+
+## 1.3 Dataset Placement and Folder Structure
 
