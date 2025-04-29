@@ -9,7 +9,7 @@ Develop a reliable and fair machine learning model that classifies skin lesions 
 ## Contents
 
 1. Environment Setup & Configuration
-   - 1.1 Installing Dependencies  
+   - [1.1 Installing Dependencies](#11-installing-dependencies)
    - 1.2 Using `default.yaml` Configuration File  
    - 1.3 Dataset Placement and Folder Structure  
 
@@ -35,3 +35,14 @@ Develop a reliable and fair machine learning model that classifies skin lesions 
 7. Additional Documentation
    - 7.1 [Project Report](reports/project_documentation.pdf)  
    - 7.2 [Technical Documentation](reports/technical_documentation.pdf)
+
+
+### 1.1 Installing Dependencies
+
+This project relies on TensorFlow, PyTorch, and several libraries for data handling, visualization, and image processing.
+
+To install all necessary dependencies, run:
+
+```bash
+pip install -r requirements.txt
+
