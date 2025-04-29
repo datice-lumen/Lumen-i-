@@ -1,5 +1,9 @@
-Kad ste se joinali, samo odete na colab, kliknete na "File" -> "Open notebook" -> "GitHub" -> "Include private repos" + Odaberete Lumen repo i notebook koji zelite
+# Lumen Data Science - Fair Melanoma Detection Challenge
 
-Kad saveate, saveajte na svoj branch ako samo prckate nesto, a kad zelite saveati izmjene koje svi trebaju vidjeti saveajte na main
+This repository contains our solution to the Fair Melanoma Detection Challenge using dermatoscopic images.
 
-:) :)
+## Goal
+
+Develop a reliable and fair machine learning model that classifies skin lesions as **benign or malignant**, focusing on performance **across skin tones**.
+
+## Contents
