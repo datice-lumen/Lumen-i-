@@ -1,6 +1,8 @@
 import torch
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 from router import router as predict_router
 from model import download_model_from_gdrive, CustomEfficientNet
@@ -16,6 +18,8 @@ app.add_middleware(
 )
 
 app.include_router(predict_router)
+
+app.mount("/assets", StaticFiles(directory="../frontend/src/assets"), name="assets")
 
 MODEL_PATH = "model_r0_75_r1_73_2904.pth"
 GOOGLE_DRIVE_ID = "19SDsIq7dAEXQ7nq2MnFQxRjpQ7iqfBli"
@@ -35,8 +39,8 @@ def load_model():
 
 
 @app.get("/")
-def read_root():
-    return {"message": "Melanoma Detection API is running."}
+def serve_root():
+    return FileResponse("../frontend/index.html")
 
 
 if __name__ == "__main__":
