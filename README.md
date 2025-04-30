@@ -87,6 +87,6 @@ The paths to these folders and the metadata file are defined inside `configs/def
 
 ## 2. Training Pipeline
 
-# 2.1 Launching Training from Script
+### 2.1 Launching Training from Script
 
-# 2.2 Saving Checkpoints and Logs 
+### 2.2 Saving Checkpoints and Logs 
