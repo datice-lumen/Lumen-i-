@@ -1,3 +1,17 @@
+"""
+backend/app.py — FastAPI entry-point
+
+✓ Works both locally and on Render
+✓ Serves the compiled Vue SPA from ./frontend
+✓ Downloads the model the first time the service boots
+✓ Reads the port from $PORT (Render) or falls back to 8000
+✓ Reloads only when DEV=1 is in the environment
+"""
+
+import os
+import asyncio
+from pathlib import Path
+
 import torch
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -7,7 +21,18 @@ from fastapi.responses import FileResponse
 from router import router as predict_router
 from model import download_model_from_gdrive, CustomEfficientNet
 
-app = FastAPI()
+# --------------------------------------------------------------------------- #
+# Paths & constants
+# --------------------------------------------------------------------------- #
+BASE_DIR: Path = Path(__file__).resolve().parent              # /app/backend
+FRONTEND_DIST: Path = BASE_DIR.parent / "frontend"            # /app/frontend
+MODEL_PATH: Path = BASE_DIR / "model_r0_75_r1_73_2904.pth"
+GOOGLE_DRIVE_ID: str = "19SDsIq7dAEXQ7nq2MnFQxRjpQ7iqfBli"
+
+# --------------------------------------------------------------------------- #
+# FastAPI application
+# --------------------------------------------------------------------------- #
+app = FastAPI(title="FastAPI-Vue monorepo")
 
 app.add_middleware(
     CORSMiddleware,
@@ -17,33 +42,47 @@ app.add_middleware(
     allow_credentials=True,
 )
 
+# REST/ML routes
 app.include_router(predict_router)
 
-app.mount("/assets", StaticFiles(directory="../frontend/src/assets"), name="assets")
+# Serve the single-page application
+# html=True makes every unknown path fall back to index.html (Vue router history mode)
+app.mount("/", StaticFiles(directory=FRONTEND_DIST, html=True), name="spa")
 
-MODEL_PATH = "model_r0_75_r1_73_2904.pth"
-GOOGLE_DRIVE_ID = "19SDsIq7dAEXQ7nq2MnFQxRjpQ7iqfBli"
 
-
+# --------------------------------------------------------------------------- #
+# Startup: download weights (if absent) and load the model
+# --------------------------------------------------------------------------- #
 @app.on_event("startup")
-def load_model():
-    model_path = "model_r0_75_r1_73_2904.pth"
-    model_id = "19SDsIq7dAEXQ7nq2MnFQxRjpQ7iqfBli"
-    download_model_from_gdrive(model_path, model_id)
+async def load_model() -> None:
+    """Fetch the model file from Google Drive (once) and load it into memory."""
+    if not MODEL_PATH.exists():
+        # non-blocking download executed in a thread so startup remains async
+        await asyncio.to_thread(download_model_from_gdrive, MODEL_PATH, GOOGLE_DRIVE_ID)
 
     model = CustomEfficientNet()
-    model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
+    model.load_state_dict(torch.load(MODEL_PATH, map_location=torch.device("cpu")))
     model.eval()
 
-    app.state.ml_model = model
+    app.state.ml_model = model   # Later: request.app.state.ml_model
 
 
-@app.get("/")
-def serve_root():
-    return FileResponse("../frontend/index.html")
+# --------------------------------------------------------------------------- #
+# Optional explicit root (StaticFiles already handles it, but handy for local tests)
+# --------------------------------------------------------------------------- #
+@app.get("/", include_in_schema=False)
+async def root() -> FileResponse:           # type: ignore[valid-type]
+    """Return the SPA entry point."""
+    return FileResponse(FRONTEND_DIST / "index.html")
 
 
+# --------------------------------------------------------------------------- #
+# Local development entry-point
+# --------------------------------------------------------------------------- #
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
+    port: int = int(os.environ.get("PORT", 8000))
+    reload: bool = bool(os.environ.get("DEV"))  # set DEV=1 for autoreload locally
+
+    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=reload)
