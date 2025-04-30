@@ -11,7 +11,7 @@ RUN npm ci
 
 # 2) Copy source and run the Vite build
 COPY frontend ./
-RUN npm run build           # output → /app/frontend/dist
+RUN npm run build          
 
 # 3) (optional) Drop dev-deps to keep this layer lean
 RUN npm prune --production
@@ -43,7 +43,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Helpful Python env flags
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PORT=8000                # Render overrides this automatically
+    PORT=8000                
 
 WORKDIR /app
 
@@ -52,7 +52,7 @@ COPY --from=python-deps /wheels /wheels
 RUN pip install --no-cache-dir /wheels/*.whl
 
 # ── Application code
-COPY backend ./backend                    # FastAPI + model weights
+COPY backend ./backend                   
 COPY --from=frontend-build /app/frontend/dist ./frontend   # compiled SPA
 
 EXPOSE 8000
