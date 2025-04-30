@@ -53,7 +53,7 @@ RUN pip install --no-cache-dir /wheels/*.whl
 
 # ── Application code
 COPY backend ./backend                   
-COPY --from=frontend-build /app/frontend/dist ./frontend   # compiled SPA
+COPY --from=frontend-build /app/frontend/dist ./frontend
 
 EXPOSE 8000
 
