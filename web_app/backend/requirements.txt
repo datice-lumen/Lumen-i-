@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+torch
+opencv-python
+pillow
+numpy
+pydantic
+matplotlib
