@@ -31,8 +31,9 @@ Develop a reliable and fair machine learning model that classifies skin lesions 
    - [5.2 Submission Script and Output Format](#52-submission-script-and-output-format)
 
 6. Additional Documentation
-   - 7.1 [Project Report](reports/project_documentation.pdf)  
-   - 7.2 [Technical Documentation](reports/technical_documentation.pdf)
+   - 6.1 [Project Report](reports/project_documentation.pdf)  
+   - 6.2 [Technical Documentation](reports/technical_documentation.pdf)
+
 
 ## 1. Environment Setup & Configuration
 
@@ -82,6 +83,7 @@ The training dataset used in this project can be downloaded from the [ISIC 2020 
 The `metadata_all_fold.json` file was generated through a custom preprocessing step and includes relevant information such as image names and skin tone metadata.
 
 The paths to these folders and the metadata file are defined inside `configs/default.yaml`. 
+
 
 ## 2. Training Pipeline
 
