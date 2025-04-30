@@ -1,15 +1,15 @@
 # Stage 1: Build frontend
 FROM node:18 AS frontend-builder
-WORKDIR /app
+WORKDIR .
 COPY frontend ./frontend
-WORKDIR /app/frontend
+WORKDIR ./frontend
 RUN npm install && npm run build
 
 # Stage 2: Build backend + serve frontend
 FROM python:3.11-slim
 
 # Set working dir
-WORKDIR /app
+WORKDIR ../
 
 # Install system deps
 RUN apt-get update && apt-get install -y \
@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -y \
 COPY backend ./backend
 
 # Copy frontend dist to backend's static path
-COPY --from=frontend-builder /app/frontend/dist ./backend/static
+COPY --from=frontend-builder ./frontend/dist ./backend/static
 
 # Install Python deps
 COPY backend/requirements.txt .
@@ -33,4 +33,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 EXPOSE 8000
 
 # Start app
-CMD ["uvicorn", "backend.app:app", "--host", "0.0.0.0", "--port", "8000"]
+# CMD ["uvicorn", "backend.app:app", "--host", "0.0.0.0", "--port", "8000"]
