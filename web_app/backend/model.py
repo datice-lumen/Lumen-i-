@@ -11,7 +11,7 @@ def download_model_from_gdrive(model_path, file_id):
 
     url = f"https://drive.google.com/uc?id={file_id}"
     print(f"Downloading model from {url}")
-    gdown.download(url, model_path, quiet=False)
+    gdown.download(url, str(model_path), quiet=False)
 
 
 class CustomEfficientNet(nn.Module):
