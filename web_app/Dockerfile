@@ -37,8 +37,9 @@ FROM python:3.11-slim
 
 # Minimal system libs sometimes required by Torch, Pillow, etc.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        libglib2.0-0 libsm6 libxrender1 libxext6 && \
-    rm -rf /var/lib/apt/lists/*
+        libglib2.0-0 libsm6 libxrender1 libxext6 \
+        libgl1 \
+    && rm -rf /var/lib/apt/lists/*
 
 # Helpful Python env flags
 ENV PYTHONDONTWRITEBYTECODE=1 \
