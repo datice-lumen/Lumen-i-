@@ -43,6 +43,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Helpful Python env flags
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app/backend \
     PORT=8000                
 
 WORKDIR /app
