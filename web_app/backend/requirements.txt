@@ -7,3 +7,4 @@ numpy
 pydantic
 matplotlib
 python-multipart
+gdown
