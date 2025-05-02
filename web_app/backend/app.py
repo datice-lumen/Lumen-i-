@@ -13,7 +13,7 @@ from model import download_model_from_gdrive, CustomEfficientNet
 
 
 BASE_DIR: Path = Path(__file__).resolve().parent              # /app/backend
-FRONTEND_DIST: Path = BASE_DIR.parent / "frontend" / "dist"
+FRONTEND_DIST: Path = BASE_DIR.parent / "frontend"
 MODEL_PATH: Path = BASE_DIR / "model_r0_75_r1_73_2904.pth"
 GOOGLE_DRIVE_ID: str = "19SDsIq7dAEXQ7nq2MnFQxRjpQ7iqfBli"
 
@@ -56,9 +56,9 @@ async def load_model() -> None:
 # --------------------------------------------------------------------------- #
 # Optional explicit root (StaticFiles already handles it, but handy for local tests)
 # --------------------------------------------------------------------------- #
-@app.get("/", include_in_schema=False)
-async def root() -> FileResponse:           # type: ignore[valid-type]
-    """Return the SPA entry point."""
+
+@app.get("/{full_path:path}")
+async def spa_fallback(full_path: str):
     return FileResponse(FRONTEND_DIST / "index.html")
 
 
