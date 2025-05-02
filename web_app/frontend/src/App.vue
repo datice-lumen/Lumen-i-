@@ -37,7 +37,7 @@ import { RouterView } from 'vue-router'
 
 <style scoped>
 .header {
-  padding: 12px 24px;
+  padding: 12px 32px;
   background-color: #f9fafb;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
@@ -46,7 +46,20 @@ import { RouterView } from 'vue-router'
   max-width: 1000px;
   margin: 0 auto;
   width: 100%;
+  padding: 0 24px;
+  box-sizing: border-box;
 }
+
+@media (max-width: 600px) {
+  .header {
+    padding: 12px 24px;
+  }
+
+  .header-content {
+    padding: 0 16px;
+  }
+}
+
 
 .logo {
   font-weight: bold;
