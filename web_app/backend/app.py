@@ -14,8 +14,8 @@ from model import download_model_from_gdrive, CustomEfficientNet
 
 BASE_DIR: Path = Path(__file__).resolve().parent              # /app/backend
 FRONTEND_DIST: Path = BASE_DIR.parent / "frontend"
-MODEL_PATH: Path = BASE_DIR / "model_r0_75_r1_73_2904.pth"
-GOOGLE_DRIVE_ID: str = "19SDsIq7dAEXQ7nq2MnFQxRjpQ7iqfBli"
+MODEL_PATH: Path = BASE_DIR / "MODEL_58_84_0205.pth"
+GOOGLE_DRIVE_ID: str = "1JK-zhixFey_3Wn9qcjKXwLGf2rLAfATt"
 
 
 app = FastAPI(title="FastAPI-Vue monorepo")
