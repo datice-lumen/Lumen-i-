@@ -1,8 +1,10 @@
 import base64
 import cv2
+import io
 import json
 import numpy as np
 import torch
+from PIL import Image
 from fastapi import APIRouter, UploadFile, File, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from logging import getLogger
@@ -39,12 +41,10 @@ async def process_image(request: Request, file: UploadFile = File(...)):
 
     def event_generator():
         try:
-            arr = np.frombuffer(contents, dtype=np.uint8)
-            in_image = cv2.imdecode(arr, cv2.IMREAD_COLOR)
-            if in_image is None:
-                raise ValueError("Could not decode image")
+            pil_image = Image.open(io.BytesIO(contents)).convert("RGB")
+            in_image = cv2.cvtColor(np.array(pil_image), cv2.COLOR_RGB2BGR)
         except Exception as e:
-            yield format_sse(json.dumps({"step": "error", "message": str(e)}))
+            yield format_sse(json.dumps({"step": "error", "message": f"Image decode failed: {e}"}))
             return
 
         # tell client about dims & original upload
