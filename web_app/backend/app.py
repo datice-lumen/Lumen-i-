@@ -1,13 +1,3 @@
-"""
-backend/app.py — FastAPI entry-point
-
-✓ Works both locally and on Render
-✓ Serves the compiled Vue SPA from ./frontend
-✓ Downloads the model the first time the service boots
-✓ Reads the port from $PORT (Render) or falls back to 8000
-✓ Reloads only when DEV=1 is in the environment
-"""
-
 import os
 import asyncio
 from pathlib import Path
@@ -21,17 +11,13 @@ from fastapi.responses import FileResponse
 from router import router as predict_router
 from model import download_model_from_gdrive, CustomEfficientNet
 
-# --------------------------------------------------------------------------- #
-# Paths & constants
-# --------------------------------------------------------------------------- #
+
 BASE_DIR: Path = Path(__file__).resolve().parent              # /app/backend
-FRONTEND_DIST: Path = BASE_DIR.parent / "frontend"            # /app/frontend
+FRONTEND_DIST: Path = BASE_DIR.parent / "frontend" / "dist"
 MODEL_PATH: Path = BASE_DIR / "model_r0_75_r1_73_2904.pth"
 GOOGLE_DRIVE_ID: str = "19SDsIq7dAEXQ7nq2MnFQxRjpQ7iqfBli"
 
-# --------------------------------------------------------------------------- #
-# FastAPI application
-# --------------------------------------------------------------------------- #
+
 app = FastAPI(title="FastAPI-Vue monorepo")
 
 app.add_middleware(
