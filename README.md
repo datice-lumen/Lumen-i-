@@ -2,7 +2,7 @@
 
 A deep CNN approach with equalized skin tone performances, developed for the **Lumen Data Science Challenge 2025**.
 
-**Authors:** Filip Hlup, Jurica Jerinic, Tomislav Matanovic, Karlo Rastegorac
+**Authors:** Jurica Jerinic, Filip Hlup, Tomislav Matanovic, Karlo Rastegorac
 **Group:** Datice
 
 ## Overview
