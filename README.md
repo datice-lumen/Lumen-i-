@@ -22,58 +22,75 @@ A [live web application](https://lumen-i.onrender.com) is also available for int
 ## Repository Structure
 
 ```
+src/lumen/                        # Core Python package (pip install -e .)
+  preprocessing.py                # Hair removal, cropping, resize pipeline
+  skin_tone.py                    # ITA calculation & Fitzpatrick mapping
+  model.py                        # CustomCNN + PretrainedEfficientNet architectures
+  inference.py                    # Tensor prep, prediction, Grad-CAM
+  folding.py                      # Triple-stratified k-fold splitting
+  training/                       # Training-specific modules
+    loss.py                       # Fairness-aware custom loss function
+    augmentation.py               # Data augmentation transforms
+    dataset.py                    # PyTorch Dataset with parallel loading
+    evaluation.py                 # Metrics, fairness evaluation, plotting
+    trainer.py                    # Training loop with early stopping
+
+scripts/                          # CLI entrypoints
+  preprocess_dataset.py           # Batch dataset preprocessing
+  predict.py                      # Batch inference
+  train.py                        # Model training
+
 configs/default.yaml              # Training/inference configuration
-preprocessing/
-  preprocess.py                   # Data preprocessing & k-fold splitting
-  preprocess_MELANOM.ipynb        # Preprocessing exploration notebook
-training/
-  TRAIN_melanoma.ipynb            # Model training notebook (Google Colab)
-inference/
-  predict.py                     # Batch inference script
-  live_interface.py              # Single-image inference
-  live_interface_gradcam.py      # Inference with Grad-CAM visualization
 web_app/
-  Dockerfile                     # Multi-stage Docker build
-  backend/                       # FastAPI + PyTorch backend
-  frontend/                      # Vue.js + Naive UI frontend
+  Dockerfile                      # Multi-stage Docker build
+  backend/                        # FastAPI + PyTorch backend
+  frontend/                       # Vue.js + Naive UI frontend
 ```
 
 ## Quick Start
 
 ### Prerequisites
 
-- Python 3.11+
+- Python 3.10+
 - PyTorch 2.6+
 - [ISIC 2020 Training Dataset](https://challenge2020.isic-archive.com/)
 
 ### Install Dependencies
 
 ```bash
-pip install -r requirements.txt
+pip install -e .
 ```
+
+This installs the `lumen` package in editable mode with all dependencies.
 
 ### 1. Preprocess Data
 
 Place the ISIC 2020 dataset and metadata files alongside the preprocessing script, then run:
 
 ```bash
-python3 preprocessing/preprocess.py
+python scripts/preprocess_dataset.py
 ```
 
 This performs duplicate removal, hair artifact removal, ITA-based Fitzpatrick skin tone estimation, per-patient image capping, and triple-stratified k-fold splitting. Output is a structured folder with preprocessed images and metadata per fold.
 
-**Parameters** (set inside the script): `PERCENT`, `final_folder_name`, `TARGET_SIZE`, `NUM_FOLDS`, `PARALLEL`
+Configuration constants are at the top of the script: `PERCENT`, `OUTPUT_FOLDER`, `TARGET_SIZE`, `NUM_FOLDS`, `PARALLEL`.
 
 ### 2. Train the Model
 
-Open `training/TRAIN_melanoma.ipynb` in Google Colab (GPU recommended). The notebook expects the preprocessed fold output as input and handles augmentation, training with the custom fairness-aware loss, cross-validation, and model saving.
+```bash
+python scripts/train.py \
+    --data-dir preprocessing/2all_k_FOLD_dataset_PREPROCESSED2 \
+    --metadata preprocessing/2all_k_FOLD_dataset_PREPROCESSED2/metadata_all_fold.json
+```
+
+Handles augmentation, training with the custom fairness-aware loss, cross-validation, and model saving. GPU recommended.
 
 **Training config:** AdamW optimizer, LR 3e-5, batch size 128, up to 35 epochs with early stopping.
 
 ### 3. Run Inference
 
 ```bash
-python3 inference/predict.py <INPUT_FOLDER> <OUTPUT_CSV>
+python scripts/predict.py <INPUT_FOLDER> <OUTPUT_CSV>
 ```
 
 Processes a folder of `.jpg` images through the same preprocessing pipeline and outputs binary predictions to CSV. Supports parallel preprocessing (~70% of CPU cores).

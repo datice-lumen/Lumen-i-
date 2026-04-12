@@ -11,7 +11,7 @@ RUN npm ci
 
 # 2) Copy source and run the Vite build
 COPY frontend ./
-RUN npm run build          
+RUN npm run build
 
 # 3) (optional) Drop dev-deps to keep this layer lean
 RUN npm prune --production
@@ -44,8 +44,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Helpful Python env flags
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PYTHONPATH=/app/backend \
-    PORT=8000                
+    PORT=8000
 
 WORKDIR /app
 
@@ -53,8 +52,13 @@ WORKDIR /app
 COPY --from=python-deps /wheels /wheels
 RUN pip install --no-cache-dir /wheels/*.whl
 
+# ── Install lumen package
+COPY pyproject.toml ./
+COPY src ./src
+RUN pip install --no-cache-dir -e .
+
 # ── Application code
-COPY backend ./backend                   
+COPY backend ./backend
 COPY --from=frontend-build /app/frontend/dist ./frontend
 
 EXPOSE 8000
