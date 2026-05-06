@@ -64,7 +64,10 @@ def square_crop(image):
 
 
 def preprocess(image, target_size=(224, 224), compute_ita=True):
-    """Full preprocessing pipeline: square crop -> hair removal -> resize -> ITA.
+    """Full preprocessing pipeline: square crop -> resize 800 -> hair removal -> resize -> ITA.
+
+    Square crop happens on the input image before any resize, preserving
+    aspect ratio for non-3:2 inputs. Matches slavica's evaluate.py order.
 
     Args:
         image: RGB image as numpy array (any size).
@@ -79,7 +82,8 @@ def preprocess(image, target_size=(224, 224), compute_ita=True):
             processed_image only.
     """
     cropped = square_crop(image)
-    hair_mask, hairless = remove_hair(cropped)
+    sq800 = cv2.resize(cropped, (800, 800), interpolation=cv2.INTER_AREA)
+    _, hairless = remove_hair(sq800)
     resized = cv2.resize(hairless, target_size, interpolation=cv2.INTER_LANCZOS4)
 
     if not compute_ita:
@@ -93,65 +97,54 @@ def preprocess(image, target_size=(224, 224), compute_ita=True):
     return resized, metadata
 
 
-def preprocess_from_path(image_path, target_size=(200, 200), first_resize=(1200, 800)):
-    """Load image from disk, optionally downscale, then run full pipeline.
+def _load_rgb(image_path):
+    """Read a JPEG and convert to RGB. Returns None on missing file or decode failure."""
+    if not os.path.exists(image_path):
+        print(f"Image not found: {image_path}")
+        return None
+    orig = cv2.imread(image_path)
+    if orig is None:
+        print(f"Failed to read image: {image_path}")
+        return None
+    return cv2.cvtColor(orig, cv2.COLOR_BGR2RGB)
 
-    Used by the batch preprocessing script. Does an intermediate resize to
-    (1200, 800) to speed up hair removal while preserving quality.
+
+def preprocess_from_path(image_path, target_size=(200, 200)):
+    """Load image from disk and run the full pipeline (with ITA metadata).
+
+    Used by the batch dataset-preparation script.
 
     Args:
         image_path: Path to a .jpg image.
         target_size: Final output size.
-        first_resize: Intermediate size before processing (or None to skip).
 
     Returns:
         (processed_image, metadata_dict) or None if the image is invalid.
     """
-    if not os.path.exists(image_path):
-        print(f"Image not found: {image_path}")
+    rgb = _load_rgb(image_path)
+    if rgb is None:
         return None
-
-    orig = cv2.imread(image_path)
-    if orig is None:
-        print(f"Failed to read image: {image_path}")
-        return None
-    orig = cv2.cvtColor(orig, cv2.COLOR_BGR2RGB)
-
-    if not check_resize(orig):
+    if not check_resize(rgb):
         print(f"Skipping {image_path}: bad dimensions or quality")
         return None
 
-    if first_resize is not None:
-        orig = cv2.resize(orig, first_resize, interpolation=cv2.INTER_AREA)
-
-    return preprocess(orig, target_size=target_size, compute_ita=True)
+    return preprocess(rgb, target_size=target_size, compute_ita=True)
 
 
 def preprocess_for_inference(image_path, target_size=(224, 224)):
-    """Load + preprocess an image for model inference (no ITA needed).
-
-    Converts to RGB, does intermediate resize, then the full pipeline.
+    """Load + preprocess an image for model inference (no ITA).
 
     Returns:
         Preprocessed RGB numpy array, or None if invalid.
     """
-    if not os.path.exists(image_path):
-        print(f"Image not found: {image_path}")
+    rgb = _load_rgb(image_path)
+    if rgb is None:
         return None
-
-    orig = cv2.imread(image_path)
-    if orig is None:
-        print(f"Failed to read image: {image_path}")
-        return None
-    orig = cv2.cvtColor(orig, cv2.COLOR_BGR2RGB)
-
-    if not check_resize(orig):
+    if not check_resize(rgb):
         print(f"Skipping {image_path}: bad dimensions or quality")
         return None
 
-    orig = cv2.resize(orig, (1200, 800), interpolation=cv2.INTER_AREA)
-
-    return preprocess(orig, target_size=target_size, compute_ita=False)
+    return preprocess(rgb, target_size=target_size, compute_ita=False)
 
 
 # --- Parallel helpers ---
