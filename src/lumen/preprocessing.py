@@ -13,30 +13,32 @@ import numpy as np
 from lumen.skin_tone import calculate_ita_subregions
 
 
-def check_resize(in_image):
+def check_resize(in_image, min_side=400, aspect_range=(1.0, 2.0)):
     """Check whether an image meets minimum quality/aspect requirements.
 
-    Expects a 3:2 aspect ratio and at least 500px in each dimension.
+    Accepts dermatoscopic shapes (1:1 to 2:1 width-to-height) with each side
+    at least ``min_side`` pixels. ISIC-2019 mixes 4:3, 3:2, and other ratios,
+    so a tolerant range is used instead of strict equality.
     """
     height, width = in_image.shape[:2]
-    if (width / height) != (3 / 2):
+    if width < min_side or height < min_side:
         return False
-    if width < 500 or height < 500:
-        return False
-    return True
+    ratio = width / height
+    return aspect_range[0] <= ratio <= aspect_range[1]
 
 
 def remove_hair(in_image):
     """Remove dark hair artifacts using black-hat morphology + inpainting.
 
     Args:
-        in_image: BGR image as numpy array.
+        in_image: RGB image as numpy array. The pipeline standardises on RGB
+            after the entry-point conversion in ``preprocess_*`` callers.
 
     Returns:
         (hair_mask, inpainted_img) — binary mask of detected hair pixels,
-        and the cleaned image.
+        and the cleaned image (same color space as input).
     """
-    gray = cv2.cvtColor(in_image, cv2.COLOR_BGR2GRAY)
+    gray = cv2.cvtColor(in_image, cv2.COLOR_RGB2GRAY)
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (25, 25))
     blackhat = cv2.morphologyEx(gray, cv2.MORPH_BLACKHAT, kernel)
     _, hair_mask = cv2.threshold(blackhat, 20, 255, cv2.THRESH_BINARY)
@@ -65,7 +67,7 @@ def preprocess(image, target_size=(224, 224), compute_ita=True):
     """Full preprocessing pipeline: square crop -> hair removal -> resize -> ITA.
 
     Args:
-        image: BGR image as numpy array (any size).
+        image: RGB image as numpy array (any size).
         target_size: Final (width, height) tuple.
         compute_ita: If True, also compute ITA subregion values.
 
@@ -110,12 +112,17 @@ def preprocess_from_path(image_path, target_size=(200, 200), first_resize=(1200,
         return None
 
     orig = cv2.imread(image_path)
-    if first_resize is not None:
-        orig = cv2.resize(orig, first_resize, interpolation=cv2.INTER_AREA)
+    if orig is None:
+        print(f"Failed to read image: {image_path}")
+        return None
+    orig = cv2.cvtColor(orig, cv2.COLOR_BGR2RGB)
 
     if not check_resize(orig):
         print(f"Skipping {image_path}: bad dimensions or quality")
         return None
+
+    if first_resize is not None:
+        orig = cv2.resize(orig, first_resize, interpolation=cv2.INTER_AREA)
 
     return preprocess(orig, target_size=target_size, compute_ita=True)
 
@@ -133,12 +140,16 @@ def preprocess_for_inference(image_path, target_size=(224, 224)):
         return None
 
     orig = cv2.imread(image_path)
+    if orig is None:
+        print(f"Failed to read image: {image_path}")
+        return None
     orig = cv2.cvtColor(orig, cv2.COLOR_BGR2RGB)
-    orig = cv2.resize(orig, (1200, 800), interpolation=cv2.INTER_AREA)
 
     if not check_resize(orig):
         print(f"Skipping {image_path}: bad dimensions or quality")
         return None
+
+    orig = cv2.resize(orig, (1200, 800), interpolation=cv2.INTER_AREA)
 
     return preprocess(orig, target_size=target_size, compute_ita=False)
 
