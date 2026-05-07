@@ -1,46 +1,53 @@
 dataset:
-  base_dir: "data/"            
+  base_dir: "data/"
   train_dir: "data/train/"
   val_dir: "data/val/"
 
 model:
-  name: "EfficientNetB0"
-  pretrained: true
-  custom_head:
-    global_pooling: "avg"
-    dense_units: 512
-    dropout_rate: 0.5
-    output_units: 1
-    output_activation: "sigmoid"
+  # Primary model: custom CNN trained from scratch (6.7M params)
+  name: "CustomCNN"
+  input_size: [224, 224]
+
+  # Alternative: pretrained EfficientNet-B0 with custom head
+  # name: "PretrainedEfficientNet"
+
+preprocessing:
+  target_size: [200, 200]          # for dataset preparation
+  inference_size: [224, 224]       # for model input
+  first_resize: [1200, 800]       # intermediate resize before hair removal
+  hair_kernel_size: 25
+  ita_subregion_fraction: 0.2
 
 training:
-  epochs: 50
-  batch_size: 32
-  learning_rate: 0.0005
-  weight_decay: 0.0001
-  optimizer: "adam"
-  loss: "binary_crossentropy"
-  metrics:
-    - "accuracy"
-    - "AUC"
-  callbacks:
-    early_stopping:
-      patience: 7
-    reduce_lr_on_plateau:
-      factor: 0.5
-      patience: 3
-      min_lr: 1e-7
+  epochs: 35
+  batch_size: 128
+  learning_rate: 0.00003           # 3e-5
+  optimizer: "adamw"
+  class_weights: [0.5, 8.0]
+  target_ratio: 0.15              # target class-1 ratio after augmentation
+  early_stopping_patience: 5
+  lr_reduction_patience: 2
+  lr_reduction_factor: 0.5
+  improvement_threshold: 0.97     # val_loss must improve by at least 3%
+
+folding:
+  num_folds: 5
+  test_fold: 4
+  max_class0_per_patient: 20
 
 augmentation:
-  horizontal_flip: true
-  vertical_flip: true
-  rotation_range: 20
-  zoom_range: 0.15
-  brightness_range: [0.8, 1.2]
-
-checkpoint:
-  save_dir: "models/"
-  save_name: "efficientnetb0_melanoma.pth"
+  contrast_range: [0.02, 0.1]
+  brightness_range: [0.05, 0.1]
+  noise_std_range: [0.01, 0.05]
+  hue_shift_range: [-0.06, 0.06]
+  saturation_scale_range: [0.8, 1.2]
+  value_scale_range: [0.95, 1.05]
 
 inference:
   threshold: 0.5
+  model_weights: "MODEL_58_84_0205.pth"
+  parallel: true
+
+checkpoint:
+  save_dir: "models/"
+  save_name: "model_fold_{fold}.pth"

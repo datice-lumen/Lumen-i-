@@ -9,7 +9,9 @@ from fastapi import APIRouter, UploadFile, File, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from logging import getLogger
 
-from img_process import preprocess, prepare_tensor_for_model, apply_gradcam
+from lumen.preprocessing import remove_hair, square_crop
+from lumen.skin_tone import calculate_ita_subregions, get_fitzpatrick_label
+from lumen.inference import prepare_tensor, apply_gradcam
 
 logger = getLogger(__name__)
 
@@ -20,11 +22,6 @@ router = APIRouter(
 
 
 def format_sse(data: str, event: str = None) -> str:
-    """
-    Simple formatter for Server-Sent Events:
-      event: <event-name>    (optional)
-      data: <json-payload>
-    """
     msg = ""
     if event:
         msg += f"event: {event}\n"
@@ -47,7 +44,7 @@ async def process_image(request: Request, file: UploadFile = File(...)):
             yield format_sse(json.dumps({"step": "error", "message": f"Image decode failed: {e}"}))
             return
 
-        # tell client about dims & original upload
+        # 1) Report original image
         yield format_sse(json.dumps({
             "step": "load_image",
             "height": in_image.shape[0],
@@ -55,31 +52,35 @@ async def process_image(request: Request, file: UploadFile = File(...)):
             "image_base64": base64.b64encode(contents).decode("utf-8"),
         }))
 
-        # --- 2) single call to preprocess, which yields TWO events ---
-        processed_img = None
-        for ev in preprocess(in_image, TS=(224, 224), verbose=False):
-            if ev["step"] == "remove_hair":
-                # encode mask + inpainted
-                _, mask_buf = cv2.imencode(".png", ev["hair_mask"])
-                _, inp_buf = cv2.imencode(".png", ev["inpainted"])
-                yield format_sse(json.dumps({
-                    "step": "remove_hair",
-                    "hair_mask": base64.b64encode(mask_buf).decode(),
-                    "inpainted_image": base64.b64encode(inp_buf).decode(),
-                }))
-            elif ev["step"] == "preprocess":
-                # encode final TS×TS
-                _, proc_buf = cv2.imencode(".png", ev["processed_img"])
-                processed_img = ev["processed_img"]
-                yield format_sse(json.dumps({
-                    "step": "preprocess",
-                    "skin_group": ev["skin_group"],
-                    "processed_image": base64.b64encode(proc_buf).decode(),
-                }))
+        # 2) Square crop + hair removal
+        cropped = square_crop(in_image)
+        hair_mask, inpainted = remove_hair(cropped)
 
-        # --- 3) tensor prep & model prediction ---
+        _, mask_buf = cv2.imencode(".png", hair_mask)
+        _, inp_buf = cv2.imencode(".png", inpainted)
+        yield format_sse(json.dumps({
+            "step": "remove_hair",
+            "hair_mask": base64.b64encode(mask_buf).decode(),
+            "inpainted_image": base64.b64encode(inp_buf).decode(),
+        }))
+
+        # 3) Resize + ITA / skin group
+        TS = (224, 224)
+        processed_img = cv2.resize(inpainted, TS, interpolation=cv2.INTER_LANCZOS4)
+        avg_ita, _ = calculate_ita_subregions(processed_img)
+        skin_group = get_fitzpatrick_label(avg_ita)
+
+        _, proc_buf = cv2.imencode(".png", processed_img)
+        yield format_sse(json.dumps({
+            "step": "preprocess",
+            "skin_group": skin_group,
+            "processed_image": base64.b64encode(proc_buf).decode(),
+        }))
+
+        # 4) Tensor prep + model prediction
         try:
-            tensor = prepare_tensor_for_model(cv2.cvtColor(processed_img, cv2.COLOR_BGR2RGB))
+            rgb_img = cv2.cvtColor(processed_img, cv2.COLOR_BGR2RGB)
+            tensor = prepare_tensor(rgb_img)
         except AssertionError as e:
             yield format_sse(json.dumps({
                 "step": "error",
@@ -95,20 +96,20 @@ async def process_image(request: Request, file: UploadFile = File(...)):
         yield format_sse(json.dumps({
             "step": "model_prediction",
             "probability": prob,
-            "predicted_class": pred_cls
+            "predicted_class": pred_cls,
         }))
 
-        # --- 4) Grad-CAM ---
+        # 5) Grad-CAM
         tensor.requires_grad_(True)
         cam, _ = apply_gradcam(model, tensor, model.features[-1])
         heatmap = cv2.applyColorMap(
             (cam * 255).astype(np.uint8), cv2.COLORMAP_JET
         )
-        hm_b64 = base64.b64encode(cv2.imencode('.png', heatmap)[1]).decode()
+        hm_b64 = base64.b64encode(cv2.imencode(".png", heatmap)[1]).decode()
 
         yield format_sse(json.dumps({
             "step": "gradcam",
-            "gradcam": hm_b64
+            "gradcam": hm_b64,
         }))
 
         yield format_sse(json.dumps({"step": "done"}))

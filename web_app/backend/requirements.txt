@@ -8,3 +8,5 @@ pydantic
 matplotlib
 python-multipart
 gdown
+scikit-image
+scikit-learn

@@ -21,6 +21,9 @@ data/
 *.pth
 !inference/dummy_model_state_dict.pth
 
+# Package build artifacts
+*.egg-info/
+
 # IDE
 .vscode/
 .idea/
