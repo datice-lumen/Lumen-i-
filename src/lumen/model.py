@@ -8,7 +8,6 @@ Two architectures are available:
 
 import os
 
-import gdown
 import torch
 import torch.nn as nn
 import torchvision.models as models
@@ -96,6 +95,7 @@ def download_weights_from_gdrive(model_path, file_id):
         print(f"{model_path} already exists, skipping download.")
         return
 
+    import gdown
     url = f"https://drive.google.com/uc?id={file_id}"
     print(f"Downloading model from {url}")
     gdown.download(url, str(model_path), quiet=False)
