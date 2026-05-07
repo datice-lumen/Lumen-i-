@@ -1,5 +1,7 @@
 # Usage Guide
 
+**🇬🇧 English** | [🇭🇷 Hrvatski](USAGE.hr.md)
+
 ## Setup
 
 ```bash
@@ -42,6 +44,13 @@ preprocessed/
 ├── folds.csv        # Patient-to-fold assignments
 └── metadata.json    # ITA values, labels, fold IDs
 ```
+
+> **Using a different dataset?** ISIC 2020 is the default, but any dataset works
+> as long as the inputs match its schema:
+> - `--labels` CSV must have columns `image_name`, `target` (0/1), and `patient_id`.
+> - `--duplicates` CSV must have an `ISIC_id_paired` column (pass an empty CSV
+>   with just that header if your dataset has no known duplicates).
+> - `--images` must be a folder of `.jpg` files named to match `image_name`.
 
 ---
 
@@ -145,3 +154,43 @@ processed = preprocess(image, target_size=(224, 224), compute_ita=False)
 prob, cls = predict(model, prepare_tensor(processed))
 print(f"{'Malignant' if cls else 'Benign'} ({prob:.1%})")
 ```
+
+---
+
+## Full End-to-End: From Raw Images to Tested Model
+
+Assumes you have the ISIC 2020 dataset on disk:
+- `data/train/` — folder with raw `.jpg` images
+- `data/ISIC_2020_Training_GroundTruth.csv` — labels
+- `data/2020_Challenge_duplicates.csv` — duplicate list
+
+```bash
+# 1. Install the package in editable mode
+pip install -e .
+
+# 2. Preprocess: hair removal, square crop, resize, ITA, k-fold split
+python scripts/preprocess_dataset.py \
+    --images data/train \
+    --labels data/ISIC_2020_Training_GroundTruth.csv \
+    --duplicates data/2020_Challenge_duplicates.csv \
+    --output preprocessed
+
+# 3. Train: 5-fold CV, fold 4 held out as test, weights saved to models/
+python scripts/train.py \
+    --data-dir preprocessed \
+    --metadata preprocessed/metadata.json \
+    --output-dir models
+
+# 4. Predict on the held-out test fold (fold 4) using the first trained model
+python scripts/predict.py \
+    --images preprocessed/4_fold \
+    --weights models/model_fold_0.pth \
+    --output predictions_fold4.csv
+
+# 5. Inspect predictions
+head predictions_fold4.csv
+```
+
+After step 3 you have `models/model_fold_{0..3}.pth`. Step 4 runs inference on
+the held-out fold; swap `--weights` to test each fold's model, or point
+`--images` at any folder of new `.jpg` images for real-world predictions.

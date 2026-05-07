@@ -1,14 +1,17 @@
 # Project Structure
 
+**🇬🇧 English** | [🇭🇷 Hrvatski](STRUCTURE.hr.md)
+
 ## Overview
 
 All shared logic lives in the `lumen` Python package (`src/lumen/`). Scripts and the web app are thin wrappers that import from it. No function is defined in more than one place.
 
 ```
 src/lumen/                        Core library
+src/lumen/training/               Training-only modules (loss, dataset, augmentation, trainer)
 scripts/                          CLI entrypoints (import from lumen)
 web_app/                          FastAPI backend + Vue frontend (imports from lumen)
-configs/                          YAML configuration
+configs/default.yaml              Default hyperparameters (dataset paths, model, preprocessing, training)
 ```
 
 ---
@@ -159,31 +162,31 @@ Raw .jpg images
       │
       ▼
 ┌─────────────────────┐
-│  preprocess_dataset  │  scripts/preprocess_dataset.py
-│  (preprocessing.py)  │  remove hair, crop, resize, compute ITA
-│  (skin_tone.py)      │  estimate Fitzpatrick type
-│  (folding.py)        │  patient-level k-fold split
+│  preprocess_dataset │  scripts/preprocess_dataset.py
+│  (preprocessing.py) │  remove hair, crop, resize, compute ITA
+│  (skin_tone.py)     │  estimate Fitzpatrick type
+│  (folding.py)       │  patient-level k-fold split
 └─────────┬───────────┘
           ▼
    Preprocessed folds + metadata.json
           │
           ▼
 ┌─────────────────────┐
-│       train          │  scripts/train.py
-│  (dataset.py)        │  load images, augment class-1 + group 56
-│  (augmentation.py)   │  random transforms
-│  (loss.py)           │  fairness-aware weighted BCE
-│  (trainer.py)        │  AdamW, early stopping, LR scheduling
-│  (evaluation.py)     │  per-epoch metrics + fairness reporting
+│       train         │  scripts/train.py
+│  (dataset.py)       │  load images, augment class-1 + group 56
+│  (augmentation.py)  │  random transforms
+│  (loss.py)          │  fairness-aware weighted BCE
+│  (trainer.py)       │  AdamW, early stopping, LR scheduling
+│  (evaluation.py)    │  per-epoch metrics + fairness reporting
 └─────────┬───────────┘
           ▼
      model_fold_N.pth
           │
           ▼
 ┌─────────────────────┐
-│      predict         │  scripts/predict.py
-│  (preprocessing.py)  │  preprocess new images
-│  (inference.py)      │  tensor prep, forward pass
+│      predict        │  scripts/predict.py
+│  (preprocessing.py) │  preprocess new images
+│  (inference.py)     │  tensor prep, forward pass
 └─────────┬───────────┘
           ▼
     predictions.csv
