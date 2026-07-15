@@ -9,11 +9,6 @@ import torch
 from PIL import Image
 from torchvision import transforms
 
-# DINOv2 emits xFormers-unavailable warnings when it falls back to plain
-# attention (no xFormers on this CPU-only box). Harmless; the classifier's
-# train.py suppresses these too. Silence for pristine output.
-warnings.filterwarnings("ignore", message="xFormers is not available.*")
-
 _IMAGENET_MEAN = [0.485, 0.456, 0.406]
 _IMAGENET_STD = [0.229, 0.224, 0.225]
 _RESIZE = 448  # matches train.py
@@ -27,7 +22,12 @@ _transform = transforms.Compose([
 
 @functools.lru_cache(maxsize=1)
 def _load_model():
-    model = torch.hub.load("facebookresearch/dinov2", "dinov2_vits14_reg", verbose=False)
+    # DINOv2 emits harmless "xFormers is not available" warnings when it falls
+    # back to plain attention (no xFormers on this CPU-only box). Suppress them
+    # locally at model-construction time rather than mutating the global filter.
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="xFormers is not available.*")
+        model = torch.hub.load("facebookresearch/dinov2", "dinov2_vits14_reg", verbose=False)
     model.eval()
     return model
 

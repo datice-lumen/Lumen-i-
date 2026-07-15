@@ -1,10 +1,6 @@
 import numpy as np
-import pytest
+from PIL import Image
 from lumen.gating.dino_embed import embed
-
-# DINOv2's CPU fallback emits harmless "xFormers is not available" UserWarnings
-# during model construction; pytest surfaces them regardless of module filters.
-pytestmark = pytest.mark.filterwarnings("ignore:xFormers is not available")
 
 
 def test_embed_returns_384d_finite_vector():
@@ -21,3 +17,13 @@ def test_embed_is_deterministic():
     a = embed(img)
     b = embed(img)
     assert np.allclose(a, b, atol=1e-5)
+
+
+def test_embed_accepts_pil_image_matching_numpy():
+    # The public interface must also accept a PIL image (later tasks rely on it).
+    arr = np.full((128, 128, 3), 127, dtype=np.uint8)
+    from_numpy = embed(arr)
+    from_pil = embed(Image.fromarray(arr, "RGB"))
+    assert from_pil.shape == (384,)
+    assert from_pil.dtype == np.float32
+    assert np.allclose(from_numpy, from_pil, atol=1e-5)
