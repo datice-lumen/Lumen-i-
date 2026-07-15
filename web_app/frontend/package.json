@@ -13,6 +13,8 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@fontsource-variable/bricolage-grotesque": "^5.2.10",
+    "@fontsource-variable/hanken-grotesk": "^5.2.8",
     "@vicons/antd": "^0.13.0",
     "axios": "^1.9.0",
     "markdown-it": "^14.1.0",
