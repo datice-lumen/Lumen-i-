@@ -27,23 +27,52 @@ def check_resize(in_image, min_side=400, aspect_range=(1.0, 2.0)):
     return aspect_range[0] <= ratio <= aspect_range[1]
 
 
-def remove_hair(in_image):
+def remove_hair(in_image, kernel_size=25):
     """Remove dark hair artifacts using black-hat morphology + inpainting.
 
     Args:
         in_image: RGB image as numpy array. The pipeline standardises on RGB
             after the entry-point conversion in ``preprocess_*`` callers.
+        kernel_size: Side of the square black-hat structuring element. The fused
+            448px pipeline scales this with the intermediate resolution; the
+            default (25) preserves the original 800px pipeline behaviour.
 
     Returns:
         (hair_mask, inpainted_img) — binary mask of detected hair pixels,
         and the cleaned image (same color space as input).
     """
     gray = cv2.cvtColor(in_image, cv2.COLOR_RGB2GRAY)
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (25, 25))
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (kernel_size, kernel_size))
     blackhat = cv2.morphologyEx(gray, cv2.MORPH_BLACKHAT, kernel)
     _, hair_mask = cv2.threshold(blackhat, 20, 255, cv2.THRESH_BINARY)
     inpainted_img = cv2.inpaint(in_image, hair_mask, inpaintRadius=10, flags=cv2.INPAINT_TELEA)
     return hair_mask, inpainted_img
+
+
+def preprocess_fused(rgb, target_size=448):
+    """Preprocess an RGB image for the fused metadata model (model_10_6).
+
+    Matches model_10_6/preprocess.py exactly: center square crop -> resize to
+    ``max(800, 2*target_size)`` -> hair removal with a proportional (odd) kernel
+    -> resize to ``target_size`` (LANCZOS4).
+
+    Args:
+        rgb: RGB image as a numpy array (any size).
+        target_size: Final square side (default 448, the model's training size).
+
+    Returns:
+        (final_rgb, hair_mask, inpainted_rgb) — the model-ready RGB image plus the
+        intermediate hair mask and inpainted image (both at the intermediate
+        resolution) so the pipeline stages can be streamed to the UI.
+    """
+    cropped = square_crop(rgb)
+    intermed = max(800, target_size * 2)
+    raw_kernel = round(25 * intermed / 800)
+    hair_kernel = raw_kernel if raw_kernel % 2 == 1 else raw_kernel + 1
+    resized = cv2.resize(cropped, (intermed, intermed), interpolation=cv2.INTER_AREA)
+    hair_mask, inpainted = remove_hair(resized, kernel_size=hair_kernel)
+    final = cv2.resize(inpainted, (target_size, target_size), interpolation=cv2.INTER_LANCZOS4)
+    return final, hair_mask, inpainted
 
 
 def square_crop(image):

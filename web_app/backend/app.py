@@ -1,21 +1,21 @@
 import os
-import asyncio
+import logging
 from pathlib import Path
 
-import torch
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
 from router import router as predict_router
-from lumen.model import CustomCNN, download_weights_from_gdrive
+from lumen.model_meta import load_fused_model
 
+logger = logging.getLogger(__name__)
 
 BASE_DIR: Path = Path(__file__).resolve().parent              # /app/backend
 FRONTEND_DIST: Path = BASE_DIR.parent / "frontend"
-MODEL_PATH: Path = BASE_DIR / "MODEL_58_84_0205.pth"
-GOOGLE_DRIVE_ID: str = "1JK-zhixFey_3Wn9qcjKXwLGf2rLAfATt"
+# Fused metadata-aware model, committed alongside the backend (2.9 MB).
+MODEL_PATH: Path = BASE_DIR / "najbolji_10_6.pt"
 
 
 app = FastAPI(title="FastAPI-Vue monorepo")
@@ -37,20 +37,23 @@ app.mount("/", StaticFiles(directory=FRONTEND_DIST, html=True), name="spa")
 
 
 # --------------------------------------------------------------------------- #
-# Startup: download weights (if absent) and load the model
+# Startup: build the fused model and load committed weights.
+# DINOv2-S is pulled from torch.hub on first run (needs network, then cached).
 # --------------------------------------------------------------------------- #
 @app.on_event("startup")
 async def load_model() -> None:
-    """Fetch the model file from Google Drive (once) and load it into memory."""
-    if not MODEL_PATH.exists():
-        # non-blocking download executed in a thread so startup remains async
-        await asyncio.to_thread(download_weights_from_gdrive, MODEL_PATH, GOOGLE_DRIVE_ID)
-
-    model = CustomCNN()
-    model.load_state_dict(torch.load(MODEL_PATH, map_location=torch.device("cpu")))
-    model.eval()
-
-    app.state.ml_model = model   # Later: request.app.state.ml_model
+    """Load the fused metadata-aware model into memory once at startup."""
+    try:
+        model, meta_cfg = load_fused_model(str(MODEL_PATH), device="cpu")
+        app.state.ml_model = model
+        app.state.meta_cfg = meta_cfg
+        logger.info("Loaded fused model from %s", MODEL_PATH)
+    except Exception as e:
+        # Leave state unset so the endpoint returns a clean error rather than crashing
+        # the whole app (e.g. DINOv2 hub download unavailable, missing checkpoint).
+        app.state.ml_model = None
+        app.state.meta_cfg = None
+        logger.exception("Failed to load model: %s", e)
 
 
 # --------------------------------------------------------------------------- #
