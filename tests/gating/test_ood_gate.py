@@ -44,3 +44,13 @@ def test_non_finite_feature_raises():
 def test_fit_rejects_non_2d():
     with pytest.raises(ValueError):
         OODGate.fit(np.zeros(16))
+
+
+def test_fit_succeeds_when_n_less_than_dim():
+    # LedoitWolf shrinkage must yield a finite, invertible precision even at n < D.
+    feats = _cluster(n=8, d=16)
+    gate = OODGate.fit(feats, percentile=99.0)
+    assert gate.precision.shape == (16, 16)
+    assert np.all(np.isfinite(gate.precision))
+    assert np.isfinite(gate.score(np.zeros(16)))
+    assert gate.score(np.full(16, 25.0)) > gate.score(gate.mean)
