@@ -9,7 +9,6 @@
         <a href="#analyzer">Analyzer</a>
         <a href="#moles">My moles</a>
         <a href="#how">How it works</a>
-        <a href="#fairness">Fairness</a>
         <a href="#results">Results</a>
         <a href="#about">About</a>
       </nav>

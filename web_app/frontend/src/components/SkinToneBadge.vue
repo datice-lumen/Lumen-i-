@@ -21,9 +21,8 @@
     </div>
 
     <p class="note">
-      Skin tone is read from lesion-free skin, not the mole itself. Datice was trained
-      with an equalized-odds objective so its sensitivity stays even across tones.
-      <a href="#fairness">How fairness is measured →</a>
+      Skin tone is read from the lesion-free skin around the mole, not the mole itself,
+      using the Individual Typology Angle mapped to a Fitzpatrick group.
     </p>
   </div>
 </template>
@@ -111,14 +110,5 @@ const index = computed(() => ROMAN[roman.value] || 0)
   font-size: 0.88rem;
   color: var(--ink-soft);
   line-height: 1.55;
-}
-.note a {
-  color: var(--coral-deep);
-  font-weight: 700;
-  text-decoration: none;
-  white-space: nowrap;
-}
-.note a:hover {
-  text-decoration: underline;
 }
 </style>

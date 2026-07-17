@@ -37,7 +37,7 @@
   --malignant-wash: #fbe8e8;
   --caution: #e08a1e;
 
-  /* --- Fitzpatrick skin-tone spectrum (the fairness motif) --- */
+  /* --- Fitzpatrick skin-tone spectrum (used by the skin-tone readout) --- */
   --skin-1: #f6e0ce;
   --skin-2: #f0c9a8;
   --skin-3: #e0ac82;

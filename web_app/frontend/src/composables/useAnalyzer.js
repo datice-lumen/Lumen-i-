@@ -19,6 +19,8 @@ function freshState() {
   return {
     phase: 'idle', // idle | streaming | done | error
     isDemo: false,
+    // true when the backend's skin gate declined the photo (not a skin image).
+    unclassified: false,
     errorMessage: '',
     meta: { width: 0, height: 0 },
     skinGroup: '',
@@ -79,6 +81,15 @@ export function useAnalyzer() {
         break
       case 'gradcam':
         state.steps.gradcam = png(p.gradcam)
+        break
+      case 'unclassified':
+        // The skin gate declined the photo: it isn't a close-up of skin, so the
+        // melanoma model was NOT run. Surface the backend's guidance via the same
+        // terminal display as errors; `unclassified` lets the view style it as a
+        // gentle "please upload a skin photo" notice rather than a failure.
+        state.unclassified = true
+        state.errorMessage = p.message || 'This image was not recognised as skin.'
+        state.phase = 'error'
         break
       case 'error':
         state.errorMessage = p.message || 'Something went wrong during analysis.'

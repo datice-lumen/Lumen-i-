@@ -57,7 +57,7 @@ defineProps({
 })
 
 const track = ref(null)
-const pos = ref(12)
+const pos = ref(100)
 let dragging = false
 let raf = 0
 
@@ -94,16 +94,17 @@ function onKey(e) {
   e.preventDefault()
 }
 
-// one-time illumination sweep on reveal
+// one-time illumination sweep on reveal, resting on the FULL heatmap so the whole
+// image shows where the model looked (drag the beam back to compare with the original).
 onMounted(() => {
   const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
   if (reduce) {
-    pos.value = 55
+    pos.value = 100
     return
   }
   const start = performance.now()
   const from = 8
-  const to = 58
+  const to = 100
   const dur = 1150
   const tick = (now) => {
     const t = Math.min(1, (now - start) / dur)
@@ -122,13 +123,13 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .gradcam {
-  margin: 0;
+  margin: 0 auto;
+  max-width: 620px;
 }
 .stage {
   position: relative;
   width: 100%;
   aspect-ratio: 1 / 1;
-  max-height: 460px;
   border-radius: var(--r-lg);
   overflow: hidden;
   background: #101a3a;

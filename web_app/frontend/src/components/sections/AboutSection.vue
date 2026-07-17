@@ -4,12 +4,11 @@
       <div class="split">
         <div class="story">
           <p class="eyebrow">About</p>
-          <h2>A challenge project, in the open</h2>
+          <h2>Open source, and it shows its work</h2>
           <p>
-            <strong>Datice</strong> was built by the team of the same name for the Lumen
-            Data Science Challenge 2025. The goal was a melanoma classifier that performs well
-            <em>and</em> fairly — so we trained a custom CNN from scratch on the ISIC 2020
-            dataset with a fairness-aware objective, rather than fine-tuning a black box.
+            <strong>Datice</strong> is a melanoma screening tool built around one idea: a model
+            you can see into. Rather than fine-tuning a black box, we trained a custom CNN from
+            scratch — so every stage, from photo to verdict, is ours to inspect and explain.
           </p>
           <p>
             Every stage of the pipeline, the model architecture, and the training code are
@@ -24,7 +23,7 @@
             </div>
             <div class="fact">
               <span class="fv">33k+</span>
-              <span class="fl">ISIC 2020 images</span>
+              <span class="fl">training images</span>
             </div>
             <div class="fact">
               <span class="fv">5-fold</span>

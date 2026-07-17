@@ -2,14 +2,14 @@
   <section id="top" class="hero">
     <div class="shell grid">
       <div class="copy">
-        <p class="eyebrow">Fairness-first melanoma screening</p>
+        <p class="eyebrow">Explainable skin-lesion screening</p>
         <h1 class="headline">
           See your skin<br />in a <span class="text-gradient">new light</span>.
         </h1>
         <p class="sub">
           Datice reads a skin-lesion photo, tells you whether it's worth a closer look,
-          and shows exactly how it got there — hair cleared, skin tone measured, and the
-          precise pixels it focused on. Built to stay accurate across every skin tone.
+          and shows exactly how it got there — hair cleared, skin tone read, and the
+          precise pixels it focused on. Every step, out in the open.
         </p>
 
         <div class="cta-row">
@@ -25,8 +25,8 @@
 
         <ul class="chips">
           <li>Explainable by design</li>
-          <li>Even across skin tones</li>
-          <li>0.86 AUC on ISIC 2020</li>
+          <li>Built for phone photos</li>
+          <li>0.86 AUC on held-out data</li>
         </ul>
       </div>
 
@@ -65,7 +65,7 @@
         <div class="float f-tone">
           <span class="swatches"></span> 6 skin tones
         </div>
-        <div class="float f-odds">Equalized odds</div>
+        <div class="float f-hair">Hair removed</div>
       </div>
     </div>
   </section>
@@ -239,7 +239,7 @@
   bottom: 12%;
   left: -4%;
 }
-.f-odds {
+.f-hair {
   bottom: 2%;
   right: 8%;
   color: var(--coral-deep);

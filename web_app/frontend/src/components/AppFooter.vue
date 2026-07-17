@@ -5,8 +5,8 @@
       <div class="col brandcol">
         <BrandLogo :size="28" />
         <p class="tag">
-          Fairness-first skin-lesion analysis that shows its work — built for the
-          Lumen Data Science Challenge 2025.
+          Skin-lesion analysis that shows its work — every step from photo to
+          verdict, out in the open.
         </p>
       </div>
 
@@ -15,7 +15,6 @@
         <a href="#analyzer">Analyzer</a>
         <a href="#moles">My moles</a>
         <a href="#how">How it works</a>
-        <a href="#fairness">Fairness</a>
         <a href="#results">Results</a>
       </div>
 
@@ -29,9 +28,6 @@
           target="_blank"
           rel="noopener"
           >Documentation</a
-        >
-        <a href="https://challenge2020.isic-archive.com/" target="_blank" rel="noopener"
-          >ISIC 2020 dataset</a
         >
       </div>
 

@@ -3,11 +3,10 @@
     <div class="shell">
       <header class="sec-head">
         <p class="eyebrow">Results</p>
-        <h2>Measured on held-out ISIC 2020 data</h2>
+        <h2>Measured on held-out test data</h2>
         <p class="lead">
           A custom CNN trained from scratch — 6.7M parameters, no pretrained backbone.
-          The fairness gap is shown right next to accuracy, because both are part of the
-          honest picture.
+          Here's how it scores on lesions it never saw during training.
         </p>
       </header>
 
@@ -40,7 +39,6 @@ const metrics = [
   { key: 'acc', value: 0.83, label: 'Accuracy', note: 'Overall correct calls on the test set.', higherBetter: true },
   { key: 'tpr', value: 0.69, label: 'Sensitivity', note: 'Share of true melanomas it catches.', higherBetter: true },
   { key: 'fpr', value: 0.16, label: 'False-positive rate', note: 'Benign lesions it flags by mistake.', higherBetter: false },
-  { key: 'eog', value: 0.51, label: 'Equalized-odds gap', note: 'Error spread across skin tones — the open challenge.', higherBetter: false },
 ]
 
 const root = ref(null)
@@ -115,7 +113,7 @@ onBeforeUnmount(() => {
   gap: 1.1rem;
 }
 .tile {
-  grid-column: span 2;
+  grid-column: span 3;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--r-lg);

@@ -15,25 +15,6 @@
         <!-- IDLE -->
         <transition name="fade" mode="out-in">
           <div v-if="state.phase === 'idle'" key="idle" class="idle">
-            <n-upload
-              :custom-request="onUpload"
-              :show-file-list="false"
-              :multiple="false"
-              accept="image/*"
-            >
-              <n-upload-dragger class="drop">
-                <span class="drop-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" width="30" height="30">
-                    <path d="M12 16V4m0 0 4 4m-4-4L8 8M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"
-                      fill="none" stroke="currentColor" stroke-width="2"
-                      stroke-linecap="round" stroke-linejoin="round" />
-                  </svg>
-                </span>
-                <p class="drop-title">Drop a photo here, or <span>browse</span></p>
-                <p class="drop-sub">JPG or PNG · a single skin lesion, well lit and in focus</p>
-              </n-upload-dragger>
-            </n-upload>
-
             <div class="meta-card">
               <p class="meta-head">
                 About this spot
@@ -69,6 +50,82 @@
                 </label>
               </div>
             </div>
+
+            <n-upload
+              :custom-request="onUpload"
+              :show-file-list="false"
+              :multiple="false"
+              accept="image/*"
+            >
+              <n-upload-dragger class="drop">
+                <span class="drop-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="30" height="30">
+                    <path d="M12 16V4m0 0 4 4m-4-4L8 8M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"
+                      fill="none" stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </span>
+                <p class="drop-title">Drop a photo here, or <span>browse</span></p>
+                <p class="drop-sub">JPG or PNG · a single skin lesion, well lit and in focus</p>
+              </n-upload-dragger>
+            </n-upload>
+
+            <details class="shots">
+              <summary>
+                <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true">
+                  <path d="M4 8h3l2-2.5h6L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"
+                    fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
+                  <circle cx="12" cy="13" r="3.2" fill="none" stroke="currentColor" stroke-width="1.8" />
+                </svg>
+                How to take a good photo
+                <span class="sum-hint">examples inside</span>
+                <svg class="chev" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                  <path d="m6 9 6 6 6-6" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </summary>
+
+              <ul class="shot-list">
+                <li>Use bright, even light — no harsh flash glare.</li>
+                <li>Fill the frame with the spot, kept in the centre.</li>
+                <li>Hold steady, about 10&nbsp;cm away, until it's sharp.</li>
+                <li>Clear hair off the spot and avoid casting shadows.</li>
+              </ul>
+
+              <div class="examples">
+                <figure class="ex-good">
+                  <img
+                    src="/photo-guide/good.jpg"
+                    width="220"
+                    height="220"
+                    loading="lazy"
+                    alt="A good photo: the spot centred, sharp and evenly lit, filling the frame"
+                  />
+                  <span class="tag do">
+                    <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+                      <path d="m5 13 4 4L19 7" fill="none" stroke="currentColor"
+                        stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    Do this
+                  </span>
+                  <figcaption>Centred, sharp, fills the frame, even light</figcaption>
+                </figure>
+
+                <p class="ex-head">Common mistakes to avoid</p>
+                <div class="dont-grid">
+                  <figure v-for="d in dontShots" :key="d.src" class="ex-dont">
+                    <img :src="d.src" width="220" height="220" loading="lazy" :alt="d.alt" />
+                    <span class="tag x" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" width="12" height="12">
+                        <path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor"
+                          stroke-width="2.6" stroke-linecap="round" />
+                      </svg>
+                    </span>
+                    <figcaption>{{ d.cap }}</figcaption>
+                  </figure>
+                </div>
+              </div>
+            </details>
 
             <div class="idle-actions">
               <n-upload
@@ -227,6 +284,15 @@ function buildMeta() {
   return { age: age.value === '' ? null : Number(age.value), sex: sex.value, anatom_site: site.value }
 }
 
+// Illustrative (synthetic) example photos for the "how to take a good photo" guide.
+const dontShots = [
+  { src: '/photo-guide/dont-far.jpg', cap: 'Too far away', alt: 'Photo taken too far away, so the spot is tiny' },
+  { src: '/photo-guide/dont-blurry.jpg', cap: 'Out of focus', alt: 'Blurry, out-of-focus photo' },
+  { src: '/photo-guide/dont-glare.jpg', cap: 'Flash glare', alt: 'Flash glare washing out the detail' },
+  { src: '/photo-guide/dont-dark.jpg', cap: 'Too dark', alt: 'Photo that is too dark or in shadow' },
+  { src: '/photo-guide/dont-hair.jpg', cap: 'Hair on the spot', alt: 'Hair covering the spot' },
+]
+
 const reasonedSummary = computed(() => metadataSummary(state.metadataUsed))
 
 const showSave = ref(false)
@@ -238,8 +304,10 @@ function onSaved({ label }) {
   if (el) el.scrollIntoView({ behavior: 'smooth' })
 }
 
-// prefer the processed 224px frame the Grad-CAM actually maps onto
-const camBase = computed(() => state.steps.processed || state.steps.original)
+// compare the heatmap against the raw uploaded photo (before any preprocessing).
+// The model saw a center square crop of this image, and the square viewer uses
+// object-fit: cover (also a center crop), so the warm zone still lands on the lesion.
+const camBase = computed(() => state.steps.original)
 
 function onUpload({ file, onFinish, onError }) {
   const raw = file.file
@@ -345,9 +413,173 @@ watch(
   font-size: 0.86rem;
 }
 
+/* --- how to take a good photo --- */
+.shots {
+  margin-top: 1.2rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  overflow: hidden;
+}
+.shots > summary {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.85rem 1.1rem;
+  cursor: pointer;
+  list-style: none;
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--ink);
+  user-select: none;
+}
+.shots > summary::-webkit-details-marker {
+  display: none;
+}
+.shots > summary svg:first-of-type {
+  flex: none;
+  color: var(--coral-deep);
+}
+.shots > summary .chev {
+  margin-left: auto;
+  color: var(--ink-faint);
+  transition: transform 0.2s var(--ease);
+}
+.shots[open] > summary .chev {
+  transform: rotate(180deg);
+}
+.shots > summary:focus-visible {
+  outline: 2px solid var(--coral);
+  outline-offset: -2px;
+}
+.shot-list {
+  margin: 0;
+  padding: 0 1.1rem 1rem 1.1rem;
+  list-style: none;
+  display: grid;
+  gap: 0.5rem;
+}
+.shot-list li {
+  position: relative;
+  padding-left: 1.4rem;
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+.shot-list li::before {
+  content: '';
+  position: absolute;
+  left: 0.2rem;
+  top: 0.5rem;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--coral);
+}
+.sum-hint {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.66rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--coral-deep);
+  background: var(--coral-wash);
+  padding: 0.14rem 0.45rem;
+  border-radius: var(--r-pill);
+}
+
+/* --- do / don't example gallery --- */
+.examples {
+  padding: 0 1.1rem 1.1rem;
+}
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.72rem;
+  line-height: 1;
+  color: #fff;
+}
+.ex-good {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin: 0.1rem 0 1.1rem;
+  padding: 0.7rem;
+  border: 1px solid var(--benign);
+  border-radius: var(--r-lg);
+  background: var(--benign-wash);
+}
+.ex-good img {
+  flex: none;
+  width: 116px;
+  height: 116px;
+  object-fit: cover;
+  border-radius: var(--r-md);
+}
+.ex-good figcaption {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--benign-ink);
+  line-height: 1.4;
+}
+.tag.do {
+  position: absolute;
+  top: 1.2rem;
+  left: 1.2rem;
+  padding: 0.22rem 0.5rem;
+  border-radius: var(--r-pill);
+  background: var(--benign);
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
+}
+.ex-head {
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: var(--ink-2);
+  margin: 0 0 0.6rem;
+}
+.dont-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 0.7rem;
+}
+.ex-dont {
+  position: relative;
+  margin: 0;
+}
+.ex-dont img {
+  width: 100%;
+  height: auto; /* override the width/height attrs so aspect-ratio governs */
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: var(--r-md);
+  border: 1px solid var(--malignant);
+}
+.ex-dont figcaption {
+  margin-top: 0.35rem;
+  font-size: 0.76rem;
+  color: var(--ink-faint);
+  text-align: center;
+}
+.tag.x {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--malignant);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
 /* --- optional metadata card --- */
 .meta-card {
-  margin-top: 1.2rem;
+  margin-bottom: 1.5rem;
   padding: 1rem 1.1rem 1.1rem;
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
