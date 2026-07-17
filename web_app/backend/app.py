@@ -14,8 +14,10 @@ logger = logging.getLogger(__name__)
 
 BASE_DIR: Path = Path(__file__).resolve().parent              # /app/backend
 FRONTEND_DIST: Path = BASE_DIR.parent / "frontend"
-# Fused metadata-aware model, committed alongside the backend (2.9 MB).
-MODEL_PATH: Path = BASE_DIR / "najbolji_10_6.pt"
+# Fused metadata-aware model, mobile fine-tuned, committed alongside the backend (2.9 MB).
+# Fine-tuned on phone close-ups (MILK10k mobile); trained WITHOUT hair removal, so the
+# request path feeds it the raw crop->448 image (see router.py / preprocess_mobile).
+MODEL_PATH: Path = BASE_DIR / "checkpoint_mobile_best.pt"
 
 
 app = FastAPI(title="FastAPI-Vue monorepo")

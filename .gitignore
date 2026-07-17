@@ -20,6 +20,10 @@ web_app/frontend/dist/
 data/
 *.pth
 !inference/dummy_model_state_dict.pth
+# Auto-downloaded on demand by ultralytics SAM("sam2_t.pt"); no need to track.
+sam2_t.pt
+# Generated eval/report artifacts.
+reports/
 
 # Package build artifacts
 *.egg-info/

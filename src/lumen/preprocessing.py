@@ -75,6 +75,26 @@ def preprocess_fused(rgb, target_size=448):
     return final, hair_mask, inpainted
 
 
+def preprocess_mobile(rgb, target_size=448):
+    """Preprocess an RGB image for the mobile fine-tuned model (checkpoint_mobile_best).
+
+    Matches mobile_eval/train_mobile.py::preprocess_image exactly: center square crop
+    -> resize to ``target_size`` (LANCZOS4). Deliberately NO hair removal — the mobile
+    model was fine-tuned on phone close-ups without it, and hair removal measurably
+    lowers its sensitivity (see mobile_eval/FINDINGS.md). This is the image the model
+    actually sees; the hair-removal stage is kept only as a cosmetic display step.
+
+    Args:
+        rgb: RGB image as a numpy array (any size).
+        target_size: Final square side (default 448, the model's training size).
+
+    Returns:
+        The model-ready RGB image (target_size x target_size).
+    """
+    cropped = square_crop(rgb)
+    return cv2.resize(cropped, (target_size, target_size), interpolation=cv2.INTER_LANCZOS4)
+
+
 def square_crop(image):
     """Center-crop to a square by trimming the wider dimension.
 

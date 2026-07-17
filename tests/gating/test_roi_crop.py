@@ -1,5 +1,7 @@
 import numpy as np
+import torch
 from lumen.gating.roi_crop import crop_roi, center_square
+from lumen.gating import roi_crop
 
 
 def _synthetic_subject_on_background():

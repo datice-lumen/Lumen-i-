@@ -7,17 +7,26 @@ import warnings
 import numpy as np
 import torch
 from PIL import Image
-from torchvision import transforms
 
 _IMAGENET_MEAN = [0.485, 0.456, 0.406]
 _IMAGENET_STD = [0.229, 0.224, 0.225]
 _RESIZE = 448  # matches train.py
 
-_transform = transforms.Compose([
-    transforms.Resize((_RESIZE, _RESIZE)),
-    transforms.ToTensor(),
-    transforms.Normalize(_IMAGENET_MEAN, _IMAGENET_STD),
-])
+_MEAN = torch.tensor(_IMAGENET_MEAN).view(3, 1, 1)
+_STD = torch.tensor(_IMAGENET_STD).view(3, 1, 1)
+
+
+def _transform(pil: Image.Image) -> torch.Tensor:
+    """Resize(448, bilinear) + ToTensor + ImageNet-normalize.
+
+    Implemented with PIL+torch (no torchvision) so the web-app environment, which
+    ships torch but not torchvision, can import this. Verified bit-identical to the
+    torchvision Compose it replaces, so the fitted gate stays valid.
+    """
+    pil = pil.resize((_RESIZE, _RESIZE), Image.BILINEAR)
+    arr = np.asarray(pil, dtype=np.float32) / 255.0   # HxWx3 in [0,1]
+    tensor = torch.from_numpy(arr).permute(2, 0, 1)   # CxHxW
+    return (tensor - _MEAN) / _STD
 
 
 @functools.lru_cache(maxsize=1)
