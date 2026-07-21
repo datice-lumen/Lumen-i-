@@ -1,0 +1,218 @@
+/* =========================================================================
+   Datice — design tokens & base styles
+   Thesis: "light through skin". The warm coral/amber palette is the colour
+   of light scattering through human tissue — not a generic cream theme.
+   ========================================================================= */
+
+:root {
+  /* --- surfaces (warm porcelain, faint rosy warmth) --- */
+  --sand: #fbf6f1;
+  --sand-deep: #f4ece2;
+  --surface: #ffffff;
+  --surface-warm: #fffcf8;
+
+  /* --- ink (warm espresso, never pure black) --- */
+  --ink: #2a211d;
+  --ink-2: #4a3c35;
+  --ink-soft: #6b5d55;
+  --ink-faint: #9c8b80;
+  --line: #ece1d6;
+  --line-strong: #ddcfc1;
+
+  /* --- accents: subsurface glow --- */
+  --coral: #f4726b;
+  --coral-soft: #f78a84;
+  --coral-deep: #d9544d;
+  --coral-wash: #fdeeed;
+  --amber: #f5a623;
+  --honey: #f7c25b;
+  --amber-wash: #fdf1dc;
+
+  /* --- semantic --- */
+  --benign: #2f9e77;
+  --benign-ink: #1f6b51;
+  --benign-wash: #e6f3ec;
+  --malignant: #d64550;
+  --malignant-ink: #a32e38;
+  --malignant-wash: #fbe8e8;
+  --caution: #e08a1e;
+
+  /* --- Fitzpatrick skin-tone spectrum (used by the skin-tone readout) --- */
+  --skin-1: #f6e0ce;
+  --skin-2: #f0c9a8;
+  --skin-3: #e0ac82;
+  --skin-4: #c68a5e;
+  --skin-5: #9c6642;
+  --skin-6: #6b4327;
+
+  /* --- signature gradients --- */
+  --glow: linear-gradient(115deg, #f4726b 0%, #f79256 48%, #f5a623 100%);
+  --glow-soft: linear-gradient(115deg, #fdeeed 0%, #fdf1dc 100%);
+  --skin-spectrum: linear-gradient(
+    90deg,
+    var(--skin-1),
+    var(--skin-2),
+    var(--skin-3),
+    var(--skin-4),
+    var(--skin-5),
+    var(--skin-6)
+  );
+
+  /* --- type --- */
+  --font-display: 'Bricolage Grotesque Variable', 'Bricolage Grotesque',
+    ui-sans-serif, system-ui, sans-serif;
+  --font-body: 'Hanken Grotesk Variable', 'Hanken Grotesk', ui-sans-serif,
+    system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* fluid type scale */
+  --fs-display: clamp(2.6rem, 1.4rem + 4.6vw, 4.75rem);
+  --fs-h1: clamp(2rem, 1.3rem + 2.6vw, 3.1rem);
+  --fs-h2: clamp(1.55rem, 1.15rem + 1.5vw, 2.25rem);
+  --fs-h3: clamp(1.2rem, 1.05rem + 0.6vw, 1.5rem);
+  --fs-lead: clamp(1.05rem, 0.98rem + 0.4vw, 1.28rem);
+  --fs-body: 1.02rem;
+  --fs-small: 0.9rem;
+  --fs-eyebrow: 0.78rem;
+
+  /* --- shape & depth --- */
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 24px;
+  --r-xl: 32px;
+  --r-pill: 999px;
+  --shadow-sm: 0 1px 2px rgba(74, 46, 32, 0.05), 0 3px 10px rgba(74, 46, 32, 0.05);
+  --shadow-md: 0 10px 34px rgba(90, 55, 40, 0.1), 0 2px 8px rgba(90, 55, 40, 0.05);
+  --shadow-lg: 0 24px 60px rgba(90, 55, 40, 0.14);
+  --shadow-glow: 0 14px 44px rgba(244, 114, 107, 0.32);
+
+  /* --- layout --- */
+  --page: 1120px;
+  --page-narrow: 780px;
+  --gutter: clamp(1.1rem, 0.6rem + 2.2vw, 2.5rem);
+  --section-y: clamp(3.5rem, 2rem + 6vw, 6.5rem);
+
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: 1.6;
+  color: var(--ink);
+  background-color: var(--sand);
+  /* soft warm ambient glow, top-left and top-right, like light behind skin */
+  background-image:
+    radial-gradient(60rem 40rem at 8% -8%, rgba(245, 166, 35, 0.1), transparent 60%),
+    radial-gradient(52rem 40rem at 108% 4%, rgba(244, 114, 107, 0.12), transparent 58%);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin: 0;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+::selection {
+  background: rgba(244, 114, 107, 0.24);
+}
+
+/* focus visibility — part of the quality floor */
+:focus-visible {
+  outline: 3px solid var(--coral);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* --- shared layout helpers --- */
+.shell {
+  width: 100%;
+  max-width: var(--page);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: var(--fs-eyebrow);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--coral-deep);
+}
+
+.eyebrow::before {
+  content: '';
+  width: 1.5rem;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--glow);
+}
+
+/* thin skin-spectrum rule used as a section divider motif */
+.spectrum-rule {
+  height: 3px;
+  border: 0;
+  border-radius: 3px;
+  background: var(--skin-spectrum);
+  opacity: 0.85;
+}
+
+.text-gradient {
+  background: var(--glow);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: var(--coral-deep);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

@@ -1,27 +1,20 @@
 // main.js
 import { createApp } from 'vue'
-import App from './App.vue'
 import { createPinia } from 'pinia'
+import { create, NConfigProvider, NMessageProvider, NUpload, NButton, NSpin } from 'naive-ui'
+
+// self-hosted variable fonts (no CDN)
+import '@fontsource-variable/bricolage-grotesque'
+import '@fontsource-variable/hanken-grotesk'
+
+// design tokens + base styles
+import './styles/tokens.css'
+
+import App from './App.vue'
 import router from './router'
-import { create } from 'naive-ui'
-import {
-  NMessageProvider,
-  NCard,
-  NSpace,
-  NUpload,
-  NButton,
-  NImage
-} from 'naive-ui'
 
 const naive = create({
-  components: [
-    NMessageProvider,
-    NCard,
-    NSpace,
-    NUpload,
-    NButton,
-    NImage
-  ]
+  components: [NConfigProvider, NMessageProvider, NUpload, NButton, NSpin],
 })
 
 const app = createApp(App)
