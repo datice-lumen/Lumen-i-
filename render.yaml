@@ -1,0 +1,16 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+# Deploy: Render Dashboard → New → Blueprint → pick this repo.
+services:
+  - type: web
+    name: lumen
+    runtime: docker
+    # Build from the repo root so the Dockerfile can COPY both web_app/ and src/.
+    dockerfilePath: ./web_app/Dockerfile
+    dockerContext: .
+    # DINOv2 + Torch need real RAM (~500-700 MB under load); 2 GB gives headroom.
+    plan: standard
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"

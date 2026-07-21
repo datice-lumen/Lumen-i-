@@ -1,0 +1,32 @@
+# Build context is the repo root — keep it small and reproducible.
+.git
+.gitignore
+.venv
+venv
+env
+**/__pycache__
+*.py[cod]
+*.egg-info
+.pytest_cache
+
+# Frontend deps/build are produced inside the image, not shipped as context.
+web_app/frontend/node_modules
+web_app/frontend/dist
+
+# Large/local-only assets not needed to build the image.
+data
+reports
+sam2_t.pt
+*.pth
+docs
+inference
+scripts
+tests
+.idea
+.vscode
+.claude
+.superpowers
+
+# Env files must never enter the image.
+.env
+.env.*
