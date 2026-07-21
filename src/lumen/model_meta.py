@@ -141,17 +141,21 @@ def load_dino(device="cpu"):
     return m.to(device)
 
 
-def load_fused_model(checkpoint_path, device="cpu"):
+def load_fused_model(checkpoint_path, device="cpu", dino=None):
     """Build the fused model and load weights from the dict checkpoint.
 
     Returns (model, meta_cfg) where meta_cfg carries the metadata-encoder settings:
     {age_mean, age_std, sex_categories, site_categories, resize}.
+
+    ``dino`` lets a caller inject an already-loaded frozen DINOv2 backbone so several
+    fused models can share one instance (it is frozen + eval, so sharing is safe and
+    avoids a second torch.hub load). When None, the backbone is loaded here.
     """
     # Trusted, repo-committed weights; only tensors + simple types -> weights_only.
     ck = torch.load(checkpoint_path, map_location=device, weights_only=True)
     cfg = ck.get("config", {})
 
-    dino = load_dino(device)
+    dino = load_dino(device) if dino is None else dino
     cnn = TinyCNN(cfg.get("CNN_OUT_CHANNELS", CNN_OUT_CHANNELS)).to(device)
     vision_proj = VisionProj().to(device)
     meta_mlp = MetaMLP().to(device)

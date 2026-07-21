@@ -8,16 +8,20 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
 from router import router as predict_router
-from lumen.model_meta import load_fused_model
+from lumen.model_meta import load_dino, load_fused_model
 
 logger = logging.getLogger(__name__)
 
 BASE_DIR: Path = Path(__file__).resolve().parent              # /app/backend
 FRONTEND_DIST: Path = BASE_DIR.parent / "frontend"
-# Fused metadata-aware model, mobile fine-tuned, committed alongside the backend (2.9 MB).
-# Fine-tuned on phone close-ups (MILK10k mobile); trained WITHOUT hair removal, so the
-# request path feeds it the raw crop->448 image (see router.py / preprocess_mobile).
-MODEL_PATH: Path = BASE_DIR / "checkpoint_mobile_best.pt"
+# Two fused metadata-aware checkpoints (identical architecture), committed alongside
+# the backend (~2.9 MB each). They share one frozen DINOv2 backbone at runtime.
+#   phone: mobile fine-tune on phone close-ups (MILK10k), trained WITHOUT hair removal
+#          -> fed the raw crop->448 image (router.py / preprocess_mobile).
+#   derm:  original dermatoscopic model_10_6, trained WITH hair removal
+#          -> fed the hair-removed 448 image (router.py / preprocess_fused).
+MOBILE_MODEL_PATH: Path = BASE_DIR / "checkpoint_mobile_best.pt"
+DERM_MODEL_PATH: Path = BASE_DIR / "najbolji_10_6.pt"
 
 
 app = FastAPI(title="FastAPI-Vue monorepo")
@@ -44,18 +48,32 @@ app.mount("/", StaticFiles(directory=FRONTEND_DIST, html=True), name="spa")
 # --------------------------------------------------------------------------- #
 @app.on_event("startup")
 async def load_model() -> None:
-    """Load the fused metadata-aware model into memory once at startup."""
+    """Load both fused models into memory once at startup, sharing one DINOv2 backbone.
+
+    Each checkpoint loads independently: a failure leaves that mode unset (the endpoint
+    then returns a clean error for that mode) rather than crashing the app or taking the
+    other mode down with it. The shared DINOv2 is pulled from torch.hub on first run.
+    """
+    app.state.ml_models = {}
+    app.state.meta_cfg = None
+
     try:
-        model, meta_cfg = load_fused_model(str(MODEL_PATH), device="cpu")
-        app.state.ml_model = model
-        app.state.meta_cfg = meta_cfg
-        logger.info("Loaded fused model from %s", MODEL_PATH)
+        dino = load_dino(device="cpu")
     except Exception as e:
-        # Leave state unset so the endpoint returns a clean error rather than crashing
-        # the whole app (e.g. DINOv2 hub download unavailable, missing checkpoint).
-        app.state.ml_model = None
-        app.state.meta_cfg = None
-        logger.exception("Failed to load model: %s", e)
+        # No backbone -> no models. Leave state empty; endpoint returns a clean error.
+        logger.exception("Failed to load DINOv2 backbone: %s", e)
+        return
+
+    for mode, path in (("phone", MOBILE_MODEL_PATH), ("derm", DERM_MODEL_PATH)):
+        try:
+            model, meta_cfg = load_fused_model(str(path), device="cpu", dino=dino)
+            app.state.ml_models[mode] = model
+            # Both checkpoints carry identical metadata config; keep the first loaded.
+            if app.state.meta_cfg is None:
+                app.state.meta_cfg = meta_cfg
+            logger.info("Loaded %s model from %s", mode, path)
+        except Exception as e:
+            logger.exception("Failed to load %s model from %s: %s", mode, path, e)
 
 
 # --------------------------------------------------------------------------- #

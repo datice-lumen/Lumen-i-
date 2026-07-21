@@ -31,6 +31,29 @@ def format_sse(data: str, event: str = None) -> str:
     return msg
 
 
+# The two analysis modes and their default. "phone" runs the mobile fine-tune on a
+# plain crop->448 image; "derm" runs the dermatoscopic model_10_6 on the hair-removed
+# image it was trained on. Anything unrecognised falls back to "phone".
+DEFAULT_MODE = "phone"
+VALID_MODES = ("phone", "derm")
+
+
+def resolve_mode(mode) -> str:
+    """Normalise a requested mode to one of VALID_MODES, defaulting to phone."""
+    return mode if mode in VALID_MODES else DEFAULT_MODE
+
+
+def select_model_input(mode, mobile_rgb, derm_rgb):
+    """Pick the RGB image the model should see for the given (already-resolved) mode.
+
+    - phone -> ``mobile_rgb``: crop->448, no hair removal (preprocess_mobile), matching
+      how checkpoint_mobile_best was fine-tuned.
+    - derm  -> ``derm_rgb``: the hair-removed 448 image (preprocess_fused final),
+      matching how najbolji_10_6 / model_10_6 was trained.
+    """
+    return derm_rgb if mode == "derm" else mobile_rgb
+
+
 @router.post("/process")
 async def process_image(
     request: Request,
@@ -38,13 +61,20 @@ async def process_image(
     age: Optional[str] = Form(None),
     sex: Optional[str] = Form(None),
     anatom_site: Optional[str] = Form(None),
+    mode: Optional[str] = Form(None),
 ):
     """Stream the fused metadata-aware analysis of an uploaded lesion photo.
+
+    ``mode`` selects which model runs: "phone" (default) uses the mobile fine-tune on a
+    plain crop, "derm" uses the dermatoscopic model_10_6 on the hair-removed image it
+    was trained on. Unrecognised values fall back to "phone".
 
     Metadata (age/sex/anatom_site) is optional; missing or unrecognised values fall
     back to the model's unknown/missing encoding, so an image-only request still works.
     """
-    model = getattr(request.app.state, "ml_model", None)
+    resolved_mode = resolve_mode(mode)
+    models = getattr(request.app.state, "ml_models", {}) or {}
+    model = models.get(resolved_mode)
     meta_cfg = getattr(request.app.state, "meta_cfg", None)
 
     contents = await file.read()
@@ -129,9 +159,13 @@ async def process_image(
             "processed_image": base64.b64encode(proc_buf).decode(),
         }))
 
-        # 4) Model input: crop -> 448 direct (no hair removal), matching how the mobile
-        # checkpoint was trained. Tensor + metadata + fused prediction.
-        model_rgb = preprocess_mobile(rgb, target_size=resize)
+        # 4) Model input depends on the mode. phone: crop -> 448 direct (no hair
+        # removal), matching the mobile checkpoint. derm: the hair-removed 448 image
+        # (display_rgb from step 2), matching how model_10_6 was trained. Tensor +
+        # metadata + fused prediction.
+        model_rgb = select_model_input(
+            resolved_mode, preprocess_mobile(rgb, target_size=resize), display_rgb
+        )
         img_tensor = image_to_tensor(model_rgb)
         meta_tensor, meta_used = encode_metadata(age, sex, anatom_site, meta_cfg)
 

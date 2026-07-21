@@ -4,17 +4,48 @@
       <header class="sec-head">
         <p class="eyebrow">Live analyzer</p>
         <h2>See it work on a photo</h2>
-        <p class="lead">
-          Upload a dermatoscope image or a clear phone photo. Datice streams every step
-          of its reasoning as it runs — the cleanup, the skin-tone read, the call, and
-          where it looked. Nothing is hidden behind a single score.
-        </p>
+        <p class="lead">{{ leadText }}</p>
       </header>
 
       <div class="stage-card">
         <!-- IDLE -->
         <transition name="fade" mode="out-in">
           <div v-if="state.phase === 'idle'" key="idle" class="idle">
+            <div class="mode-toggle" role="radiogroup" aria-label="Image type">
+              <button
+                type="button"
+                role="radio"
+                :aria-checked="mode === 'phone'"
+                :class="{ active: mode === 'phone' }"
+                @click="mode = 'phone'"
+              >
+                <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true">
+                  <rect x="7" y="2.5" width="10" height="19" rx="2.2" fill="none"
+                    stroke="currentColor" stroke-width="1.8" />
+                  <path d="M10.5 5.2h3" fill="none" stroke="currentColor"
+                    stroke-width="1.8" stroke-linecap="round" />
+                </svg>
+                Phone photo
+              </button>
+              <button
+                type="button"
+                role="radio"
+                :aria-checked="mode === 'derm'"
+                :class="{ active: mode === 'derm' }"
+                @click="mode = 'derm'"
+              >
+                <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true">
+                  <circle cx="11" cy="11" r="6.2" fill="none" stroke="currentColor"
+                    stroke-width="1.8" />
+                  <circle cx="11" cy="11" r="2.4" fill="none" stroke="currentColor"
+                    stroke-width="1.8" />
+                  <path d="m16 16 4 4" fill="none" stroke="currentColor"
+                    stroke-width="1.8" stroke-linecap="round" />
+                </svg>
+                Dermatoscope
+              </button>
+            </div>
+
             <div class="meta-card">
               <p class="meta-head">
                 About this spot
@@ -66,11 +97,22 @@
                   </svg>
                 </span>
                 <p class="drop-title">Drop a photo here, or <span>browse</span></p>
-                <p class="drop-sub">JPG or PNG · a single skin lesion, well lit and in focus</p>
+                <p class="drop-sub">{{ dropSub }}</p>
               </n-upload-dragger>
             </n-upload>
 
-            <details class="shots">
+            <p v-if="mode === 'derm'" class="derm-note">
+              <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true">
+                <circle cx="10" cy="10" r="5.6" fill="none" stroke="currentColor"
+                  stroke-width="1.8" />
+                <path d="m14.4 14.4 4.4 4.4" fill="none" stroke="currentColor"
+                  stroke-width="1.8" stroke-linecap="round" />
+              </svg>
+              Captured with a dermatoscope. The model was trained on contact
+              dermatoscopy images, so it reads these most confidently.
+            </p>
+
+            <details v-if="mode === 'phone'" class="shots">
               <summary>
                 <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true">
                   <path d="M4 8h3l2-2.5h6L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"
@@ -129,6 +171,7 @@
 
             <div class="idle-actions">
               <n-upload
+                v-if="mode === 'phone'"
                 :custom-request="onUpload"
                 :show-file-list="false"
                 :multiple="false"
@@ -146,7 +189,7 @@
                 </button>
               </n-upload>
 
-              <span class="or">or</span>
+              <span v-if="mode === 'phone'" class="or">or</span>
 
               <button type="button" class="btn text" @click="playDemo(buildMeta())">
                 Watch a sample run
@@ -155,10 +198,7 @@
                 </svg>
               </button>
             </div>
-            <p class="tip">
-              Your image is analysed on the fly and never stored. Dermatoscope images
-              give the most confident read; clear phone photos work too.
-            </p>
+            <p class="tip">{{ tipText }}</p>
           </div>
 
           <!-- ERROR -->
@@ -276,6 +316,27 @@ import SaveToMoleDialog from './SaveToMoleDialog.vue'
 const message = useMessage()
 const { state, STAGES, hasResult, activeStepIndex, reset, analyze, playDemo } = useAnalyzer()
 
+// Which model to run: 'phone' (mobile fine-tune) or 'derm' (dermatoscopic model_10_6).
+// Persists across "Analyze another photo" so the chosen mode sticks.
+const mode = ref('phone')
+
+// Copy that adapts to the selected mode.
+const leadText = computed(() =>
+  mode.value === 'derm'
+    ? 'Upload a dermatoscopic image of a lesion. Datice runs the dermatoscope-trained model and streams every step of its reasoning — the cleanup, the skin-tone read, the call, and where it looked. Nothing is hidden behind a single score.'
+    : 'Upload a clear phone photo of a skin spot. Datice streams every step of its reasoning as it runs — the cleanup, the skin-tone read, the call, and where it looked. Nothing is hidden behind a single score.',
+)
+const dropSub = computed(() =>
+  mode.value === 'derm'
+    ? 'JPG or PNG · a dermatoscope image of a single lesion'
+    : 'JPG or PNG · a single skin lesion, well lit and in focus',
+)
+const tipText = computed(() =>
+  mode.value === 'derm'
+    ? 'Your image is analysed on the fly and never stored. Dermatoscope images give the most confident read.'
+    : 'Your image is analysed on the fly and never stored. Clear, well-lit phone photos work best — switch to Dermatoscope above if you have a dermatoscope image.',
+)
+
 // Optional metadata the user can add before analyzing.
 const age = ref('')
 const sex = ref('unknown')
@@ -315,7 +376,7 @@ function onUpload({ file, onFinish, onError }) {
     onError()
     return
   }
-  analyze(raw, buildMeta()).finally(onFinish)
+  analyze(raw, buildMeta(), mode.value).finally(onFinish)
 }
 
 // Shareable "?demo" deep link auto-starts the sample run.
@@ -358,6 +419,71 @@ watch(
   border-radius: var(--r-xl);
   padding: clamp(1.1rem, 0.6rem + 2vw, 2.4rem);
   box-shadow: var(--shadow-md);
+}
+
+/* --- mode toggle (phone / dermatoscope) --- */
+.mode-toggle {
+  display: flex;
+  gap: 0.3rem;
+  margin-bottom: 1.5rem;
+  padding: 0.3rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+}
+.mode-toggle button {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--ink-soft);
+  padding: 0.55rem 0.9rem;
+  border: none;
+  border-radius: var(--r-pill);
+  background: transparent;
+  cursor: pointer;
+  transition: color 0.2s var(--ease), background 0.2s var(--ease),
+    box-shadow 0.2s var(--ease);
+}
+.mode-toggle button svg {
+  flex: none;
+}
+.mode-toggle button:hover:not(.active) {
+  color: var(--ink);
+  background: var(--coral-wash);
+}
+.mode-toggle button.active {
+  color: #fff;
+  background: var(--glow);
+  box-shadow: var(--shadow-glow);
+}
+.mode-toggle button:focus-visible {
+  outline: 2px solid var(--coral);
+  outline-offset: 2px;
+}
+
+/* --- dermatoscope note (shown in derm mode, in place of the phone guide) --- */
+.derm-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  margin-top: 1.2rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+.derm-note svg {
+  flex: none;
+  margin-top: 0.1rem;
+  color: var(--coral-deep);
 }
 
 /* --- idle --- */
@@ -766,6 +892,8 @@ watch(
   margin-top: 1.8rem;
   display: flex;
   justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .fade-enter-active,

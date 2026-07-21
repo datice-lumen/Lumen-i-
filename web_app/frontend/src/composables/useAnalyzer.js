@@ -104,7 +104,8 @@ export function useAnalyzer() {
   // Stream a real analysis from the FastAPI backend.
   // `metadata` is optional: { age, sex, anatom_site }. Missing/unknown values
   // are left to the backend's unknown/missing encoding.
-  async function analyze(file, metadata = {}) {
+  // `mode` selects the model: 'phone' (mobile fine-tune) or 'derm' (dermatoscopic).
+  async function analyze(file, metadata = {}, mode = 'phone') {
     reset()
     state.phase = 'streaming'
 
@@ -116,6 +117,7 @@ export function useAnalyzer() {
       }
       form.append('sex', metadata.sex || 'unknown')
       form.append('anatom_site', metadata.anatom_site || 'unknown')
+      form.append('mode', mode)
 
       const res = await fetch('/image/process', { method: 'POST', body: form })
       if (!res.ok || !res.body) throw new Error(`Server responded ${res.status}`)
