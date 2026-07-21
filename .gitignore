@@ -25,6 +25,9 @@ sam2_t.pt
 # Generated eval/report artifacts.
 reports/
 
+# Superpowers brainstorming/spec docs (local only)
+docs/superpowers/
+
 # Package build artifacts
 *.egg-info/
 
