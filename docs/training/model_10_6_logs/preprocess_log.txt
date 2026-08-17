@@ -1,0 +1,47 @@
+Gradim path index...
+  77,175 slika indeksirano za 0.1s
+
+Ukupno za obraditi: 67,085 slika
+Output dir: /home/datice/model_10_6/preprocessed448_67k
+Procesa: 16
+
+    2000/67085  ( 36.3 img/s, ETA  29.9 min)  ok=2000 skip=0 fail=0
+    4000/67085  ( 35.5 img/s, ETA  29.6 min)  ok=4000 skip=0 fail=0
+    6000/67085  ( 35.4 img/s, ETA  28.8 min)  ok=6000 skip=0 fail=0
+    8000/67085  ( 35.0 img/s, ETA  28.2 min)  ok=8000 skip=0 fail=0
+   10000/67085  ( 34.9 img/s, ETA  27.3 min)  ok=10000 skip=0 fail=0
+   12000/67085  ( 36.3 img/s, ETA  25.3 min)  ok=12000 skip=0 fail=0
+   14000/67085  ( 37.3 img/s, ETA  23.7 min)  ok=14000 skip=0 fail=0
+   16000/67085  ( 38.2 img/s, ETA  22.3 min)  ok=16000 skip=0 fail=0
+   18000/67085  ( 38.8 img/s, ETA  21.1 min)  ok=18000 skip=0 fail=0
+   20000/67085  ( 38.7 img/s, ETA  20.3 min)  ok=20000 skip=0 fail=0
+   22000/67085  ( 38.3 img/s, ETA  19.6 min)  ok=22000 skip=0 fail=0
+   24000/67085  ( 38.0 img/s, ETA  18.9 min)  ok=24000 skip=0 fail=0
+   26000/67085  ( 37.8 img/s, ETA  18.1 min)  ok=26000 skip=0 fail=0
+   28000/67085  ( 37.6 img/s, ETA  17.3 min)  ok=28000 skip=0 fail=0
+   30000/67085  ( 37.0 img/s, ETA  16.7 min)  ok=30000 skip=0 fail=0
+   32000/67085  ( 36.5 img/s, ETA  16.0 min)  ok=32000 skip=0 fail=0
+   34000/67085  ( 35.9 img/s, ETA  15.4 min)  ok=34000 skip=0 fail=0
+   36000/67085  ( 35.5 img/s, ETA  14.6 min)  ok=36000 skip=0 fail=0
+   38000/67085  ( 35.2 img/s, ETA  13.8 min)  ok=38000 skip=0 fail=0
+   40000/67085  ( 34.8 img/s, ETA  13.0 min)  ok=40000 skip=0 fail=0
+   42000/67085  ( 34.4 img/s, ETA  12.2 min)  ok=42000 skip=0 fail=0
+   44000/67085  ( 34.1 img/s, ETA  11.3 min)  ok=44000 skip=0 fail=0
+   46000/67085  ( 33.9 img/s, ETA  10.4 min)  ok=46000 skip=0 fail=0
+   48000/67085  ( 33.6 img/s, ETA   9.5 min)  ok=48000 skip=0 fail=0
+   50000/67085  ( 33.5 img/s, ETA   8.5 min)  ok=50000 skip=0 fail=0
+   52000/67085  ( 33.3 img/s, ETA   7.5 min)  ok=52000 skip=0 fail=0
+   54000/67085  ( 33.0 img/s, ETA   6.6 min)  ok=54000 skip=0 fail=0
+   56000/67085  ( 33.0 img/s, ETA   5.6 min)  ok=56000 skip=0 fail=0
+   58000/67085  ( 32.7 img/s, ETA   4.6 min)  ok=58000 skip=0 fail=0
+   60000/67085  ( 32.6 img/s, ETA   3.6 min)  ok=60000 skip=0 fail=0
+   62000/67085  ( 32.5 img/s, ETA   2.6 min)  ok=62000 skip=0 fail=0
+   64000/67085  ( 32.7 img/s, ETA   1.6 min)  ok=64000 skip=0 fail=0
+   66000/67085  ( 32.9 img/s, ETA   0.5 min)  ok=66000 skip=0 fail=0
+   67085/67085  ( 33.0 img/s, ETA   0.0 min)  ok=67085 skip=0 fail=0
+
+Gotovo za 33.9 min
+  ok           : 67085
+  skip_exists  : 0
+  missing_path : 0
+  read_failed  : 0

@@ -111,6 +111,65 @@ python scripts/predict.py \
 
 ---
 
+## 3b. Fused Model — Dermatoscopic Training (production)
+
+The model the web app actually serves is the fused metadata model (DINOv2-S
+frozen + TinyCNN + MetaMLP; `src/lumen/model_meta.py`). Its pipeline
+(defaults = the model_10_6 production run; see `docs/training/model_10_6.md`):
+
+```bash
+# 1. Preprocess to 448px with hair removal (repeat --images per dataset)
+python scripts/preprocess_fused_dataset.py \
+    --metadata final_metadata.csv \
+    --images data/2019/ISIC_2019_Training_Input \
+    --images data/2020/train \
+    --images data/MILK10k/MILK10k_Training_Input \
+    --output preprocessed448
+
+# 2. Patient-grouped stratified split (adds a "split" column in place)
+python scripts/make_split.py --metadata final_metadata.csv
+
+# 3. Train
+python scripts/train_fused.py \
+    --metadata final_metadata.csv \
+    --img-dir preprocessed448 \
+    --output-dir runs/fused
+```
+
+`train_fused.py` writes `checkpoint_<timestamp>.pt` plus `training_log_*.txt` /
+`results_*.txt` into `--output-dir`. The checkpoint loads directly via
+`lumen.model_meta.load_fused_model`.
+
+---
+
+## 3c. Mobile Model — Fine-tune & Evaluation
+
+The dermatoscopy-trained model degrades badly on phone close-ups
+(see `docs/training/mobile_findings.md`), so a separate mobile model is
+fine-tuned from the fused checkpoint on MILK10k mobile images:
+
+```bash
+# Evaluate a fused checkpoint out-of-domain (with & without hair removal)
+python scripts/eval_mobile.py \
+    --checkpoint runs/fused/checkpoint_<timestamp>.pt \
+    --eval-csv mobile_eval.csv \
+    --images data/MILK10k/MILK10k_Training_Input
+
+# Fine-tune on the mobile domain (no hair removal; twin-split protected)
+python scripts/train_mobile.py \
+    --pretrained runs/fused/checkpoint_<timestamp>.pt \
+    --eval-csv mobile_eval.csv \
+    --images data/MILK10k/MILK10k_Training_Input \
+    --output-dir runs/mobile
+```
+
+`mobile_eval.csv` has one row per MILK10k mobile image with metadata + target
+taken from its dermoscopic twin and a `twin_split` column, so fine-tuning never
+trains on a twin of a base-model test image. The output
+`checkpoint_mobile_best.pt` is the mobile model shipped in `web_app/backend/`.
+
+---
+
 ## 4. Web App
 
 ```bash

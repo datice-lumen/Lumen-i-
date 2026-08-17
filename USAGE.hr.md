@@ -111,6 +111,67 @@ python scripts/predict.py \
 
 ---
 
+## 3b. Fuzijski model — dermatoskopsko treniranje (produkcija)
+
+Model koji web aplikacija stvarno poslužuje je fuzijski model s metapodacima
+(DINOv2-S zamrznut + TinyCNN + MetaMLP; `src/lumen/model_meta.py`). Njegov
+pipeline (zadane vrijednosti = produkcijski run model_10_6; vidi
+`docs/training/model_10_6.md`):
+
+```bash
+# 1. Predobrada na 448px s uklanjanjem dlaka (ponovi --images po skupu podataka)
+python scripts/preprocess_fused_dataset.py \
+    --metadata final_metadata.csv \
+    --images data/2019/ISIC_2019_Training_Input \
+    --images data/2020/train \
+    --images data/MILK10k/MILK10k_Training_Input \
+    --output preprocessed448
+
+# 2. Stratificirani split grupiran po pacijentu (dodaje stupac "split" u CSV)
+python scripts/make_split.py --metadata final_metadata.csv
+
+# 3. Treniranje
+python scripts/train_fused.py \
+    --metadata final_metadata.csv \
+    --img-dir preprocessed448 \
+    --output-dir runs/fused
+```
+
+`train_fused.py` zapisuje `checkpoint_<timestamp>.pt` te `training_log_*.txt` /
+`results_*.txt` u `--output-dir`. Checkpoint se izravno učitava preko
+`lumen.model_meta.load_fused_model`.
+
+---
+
+## 3c. Mobilni model — fine-tune i evaluacija
+
+Model treniran na dermatoskopiji značajno degradira na mobilnim close-up
+fotografijama (vidi `docs/training/mobile_findings.md`), pa se zasebni mobilni
+model fine-tuna iz fuzijskog checkpointa na MILK10k mobilnim slikama:
+
+```bash
+# Evaluacija fuzijskog checkpointa izvan domene (s i bez uklanjanja dlaka)
+python scripts/eval_mobile.py \
+    --checkpoint runs/fused/checkpoint_<timestamp>.pt \
+    --eval-csv mobile_eval.csv \
+    --images data/MILK10k/MILK10k_Training_Input
+
+# Fine-tune na mobilnoj domeni (bez uklanjanja dlaka; twin-split zaštićen)
+python scripts/train_mobile.py \
+    --pretrained runs/fused/checkpoint_<timestamp>.pt \
+    --eval-csv mobile_eval.csv \
+    --images data/MILK10k/MILK10k_Training_Input \
+    --output-dir runs/mobile
+```
+
+`mobile_eval.csv` ima jedan redak po MILK10k mobilnoj slici, s metapodacima i
+targetom preuzetima iz njezinog dermatoskopskog blizanca te stupcem
+`twin_split`, tako da fine-tune nikad ne trenira na blizancu test slike osnovnog
+modela. Izlazni `checkpoint_mobile_best.pt` je mobilni model isporučen u
+`web_app/backend/`.
+
+---
+
 ## 4. Web aplikacija
 
 ```bash
