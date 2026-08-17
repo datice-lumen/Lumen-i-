@@ -126,15 +126,36 @@ Sve funkcije rade na float32 numpy poljima u rasponu [0,1].
 | `train_epoch(loader, model, criterion, optimizer, device)` | Jedna epoha treniranja. Vraća (avg_loss, predikcije, oznake). |
 | `k_fold_training(metadata, base_dir, train_folds, val_folds, ...)` | Cijelo treniranje: gradi datasetove, trenira uz early stopping + smanjivanje LR-a, bilježi metrike pravednosti po epohi, sprema najbolje težine. Vraća (model, history). |
 
+### `fused.py`
+
+Komponente za treniranje fuzijskog modela s metapodacima (arhitektura u `model_meta.py`). Dijele ih `train_fused.py`, `train_mobile.py` i `eval_mobile.py`.
+
+| Klasa/Funkcija | Što radi |
+|----------------|-------------|
+| `BCEJLoss` | BCE + λ·(soft_FPR + tpr_weight·(1 − soft_TPR)) — Youdenov regularizator TPR/FPR |
+| `encode_metadata_frame(df, age_mean, age_std)` | Batch verzija `model_meta.encode_metadata`: DataFrame → matrica (N, 11) |
+| `FusedImageDataset` | Predobrađene `pre_*.jpg` slike + metapodaci (treniranje osnovnog modela) |
+| `MobileImageDataset` | Sirovi MILK10k close-upovi kroz `preprocess_mobile` + metapodaci (mobilni fine-tune) |
+| `build_fused_model(device, checkpoint)` | Svježi ili iz checkpointa inicijalizirani `FusedMetaModel` |
+| `run_epoch(model, loader, criterion, device, ...)` | Jedna epoha treniranja/evaluacije; opcionalni fp16 autocast za DINO granu |
+| `build_optimizer(model, lr, wd, warmup, t_max)` | AdamW nad trenirajućim glavama + LinearWarmup→CosineAnnealing |
+| `save_fused_checkpoint(path, state, ...)` | Zapisuje kanonski checkpoint dict koji čita `load_fused_model` |
+| `calc_metrics` / `format_metrics_block` | Metrike iz matrice zabune (+ AUC) i blok izvještaja kao u logovima |
+
 ---
 
 ## `scripts/` — CLI ulazne točke
 
 | Skripta | Svrha | Glavni argumenti |
 |--------|---------|----------|
-| `preprocess_dataset.py` | Sirove slike → predobrađeni foldovi + metapodaci | `--images`, `--labels`, `--duplicates` |
-| `train.py` | Metapodaci + foldovi → istrenirane težine modela | `--data-dir`, `--metadata` |
+| `preprocess_dataset.py` | Sirove slike → predobrađeni foldovi + metapodaci (naslijeđeni CustomCNN pipeline) | `--images`, `--labels`, `--duplicates` |
+| `train.py` | Metapodaci + foldovi → istrenirane težine naslijeđenog modela | `--data-dir`, `--metadata` |
 | `predict.py` | Slike + težine → CSV s predikcijama | `--images`, `--weights` |
+| `preprocess_fused_dataset.py` | Sirove slike → 448px `pre_*.jpg` za fuzijski model | `--metadata`, `--images`, `--output` |
+| `make_split.py` | Stratificirani train/val/test split grupiran po pacijentu | `--metadata` |
+| `train_fused.py` | Treniranje dermatoskopskog fuzijskog modela (model_10_6 konfiguracija) | `--metadata`, `--img-dir` |
+| `train_mobile.py` | Fine-tune fuzijskog checkpointa na MILK10k mobilnim close-upovima | `--pretrained`, `--eval-csv`, `--images` |
+| `eval_mobile.py` | OOD evaluacija fuzijskog checkpointa na mobilnim slikama | `--checkpoint`, `--eval-csv`, `--images` |
 
 Sve skripte prihvaćaju `--help` za potpunu dokumentaciju zastavica.
 

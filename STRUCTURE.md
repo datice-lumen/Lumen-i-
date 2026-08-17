@@ -126,15 +126,36 @@ All functions operate on float32 numpy arrays in [0,1] range.
 | `train_epoch(loader, model, criterion, optimizer, device)` | One training epoch. Returns (avg_loss, predictions, labels). |
 | `k_fold_training(metadata, base_dir, train_folds, val_folds, ...)` | Full training run: builds datasets, trains with early stopping + LR reduction, logs fairness metrics per epoch, saves best weights. Returns (model, history). |
 
+### `fused.py`
+
+Training components for the fused metadata model family (architecture in `model_meta.py`). Shared by `train_fused.py`, `train_mobile.py` and `eval_mobile.py`.
+
+| Class/Function | What it does |
+|----------------|-------------|
+| `BCEJLoss` | BCE + λ·(soft_FPR + tpr_weight·(1 − soft_TPR)) — Youden-style TPR/FPR regularizer |
+| `encode_metadata_frame(df, age_mean, age_std)` | Batch version of `model_meta.encode_metadata`: DataFrame → (N, 11) matrix |
+| `FusedImageDataset` | Preprocessed `pre_*.jpg` images + metadata (base-model training) |
+| `MobileImageDataset` | Raw MILK10k close-ups via `preprocess_mobile` + metadata (mobile fine-tune) |
+| `build_fused_model(device, checkpoint)` | Fresh or checkpoint-initialised `FusedMetaModel` |
+| `run_epoch(model, loader, criterion, device, ...)` | One train/eval epoch; optional fp16 autocast for the DINO branch |
+| `build_optimizer(model, lr, wd, warmup, t_max)` | AdamW over trainable heads + LinearWarmup→CosineAnnealing |
+| `save_fused_checkpoint(path, state, ...)` | Writes the canonical checkpoint dict read by `load_fused_model` |
+| `calc_metrics` / `format_metrics_block` | Confusion-matrix metrics (+ AUC) and the run-log report block |
+
 ---
 
 ## `scripts/` — CLI Entrypoints
 
 | Script | Purpose | Key args |
 |--------|---------|----------|
-| `preprocess_dataset.py` | Raw images → preprocessed folds + metadata | `--images`, `--labels`, `--duplicates` |
-| `train.py` | Metadata + folds → trained model weights | `--data-dir`, `--metadata` |
+| `preprocess_dataset.py` | Raw images → preprocessed folds + metadata (legacy CustomCNN pipeline) | `--images`, `--labels`, `--duplicates` |
+| `train.py` | Metadata + folds → trained legacy model weights | `--data-dir`, `--metadata` |
 | `predict.py` | Images + weights → predictions CSV | `--images`, `--weights` |
+| `preprocess_fused_dataset.py` | Raw images → 448px `pre_*.jpg` for the fused model | `--metadata`, `--images`, `--output` |
+| `make_split.py` | Patient-grouped stratified train/val/test split column | `--metadata` |
+| `train_fused.py` | Train the dermatoscopic fused model (model_10_6 config) | `--metadata`, `--img-dir` |
+| `train_mobile.py` | Fine-tune a fused checkpoint on MILK10k mobile close-ups | `--pretrained`, `--eval-csv`, `--images` |
+| `eval_mobile.py` | OOD evaluation of a fused checkpoint on mobile images | `--checkpoint`, `--eval-csv`, `--images` |
 
 All scripts accept `--help` for full flag documentation.
 

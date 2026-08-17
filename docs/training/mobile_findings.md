@@ -1,5 +1,9 @@
 # Mobile-domain evaluation of the newest model (model_10_6)
 
+> Report recorded on slavica; server paths refer to `/home/datice`. The scripts
+> behind it now live in the repo: `scripts/eval_mobile.py` (this evaluation) and
+> `scripts/train_mobile.py` (the resulting fine-tune). Raw output: `mobile_eval.log`.
+
 **Date:** 2026-07-15
 **Model:** `/home/datice/model_10_6/checkpoint_20260610_230527.pt`
 (DINOv2-S frozen + TinyCNN + MetaMLP → Classifier, 448px, best_epoch=7, val_loss=1.4265)
