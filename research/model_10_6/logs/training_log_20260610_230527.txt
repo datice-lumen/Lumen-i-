@@ -1,0 +1,25 @@
+======================================================================
+DINOv2-S (frozen) ++ TinyCNN(AvgPool+MaxPool, 192) -> VisionProj -> vision_emb(256)
+  ++  MetaMLP(11->16)  ->  Classifier(272->256->128->1)  |  448px  |  67k dataset
+======================================================================
+Optimizer  : AdamW (lr=0.0003, wd=0.01)
+Schedule   : LinearWarmup(2ep) + CosineAnnealingLR (T_max=40)
+Early stop : patience=4 na eval(val) lossu  |  Max epochs: 150
+Batch size : 64
+Loss       : BCEJLoss (λ=0.9, tpr_weight=2.5)
+TinyCNN    : 297,024 param  |  VisionProj: 320,896  |  MetaMLP: 912  |  Classifier: 103,681
+Trainable ukupno: 722,513  (DINOv2-S frozen ~21M)
+Age stats  : mean=52.43  std=16.54  (iz train splita)
+
+  ep001  tr=1.3487  ev=1.7083  F1=0.672  TPR=0.965  FPR=0.296  (185s)
+  ep002  tr=0.8567  ev=1.4802  F1=0.765  TPR=0.918  FPR=0.158  (369s)
+  ep003  tr=0.7840  ev=1.4816  F1=0.758  TPR=0.923  FPR=0.167  (553s)
+  ep004  tr=0.7506  ev=1.4904  F1=0.788  TPR=0.899  FPR=0.125  (738s)
+  ep005  tr=0.7250  ev=1.4643  F1=0.787  TPR=0.896  FPR=0.125  (922s)
+  ep006  tr=0.7088  ev=1.4771  F1=0.792  TPR=0.901  FPR=0.122  (1107s)
+  ep007  tr=0.6915  ev=1.4265  F1=0.788  TPR=0.912  FPR=0.132  (1291s)
+  ep008  tr=0.6781  ev=1.4939  F1=0.795  TPR=0.879  FPR=0.108  (1476s)
+  ep009  tr=0.6660  ev=1.4589  F1=0.799  TPR=0.880  FPR=0.105  (1660s)
+  ep010  tr=0.6542  ev=1.4917  F1=0.801  TPR=0.859  FPR=0.094  (1844s)
+  ep011  tr=0.6409  ev=1.4601  F1=0.787  TPR=0.872  FPR=0.112  (2029s)
+  >> Early stop (best epoch=7, best_val_loss=1.4265)

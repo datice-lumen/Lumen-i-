@@ -1,0 +1,37 @@
+======================================================================
+DINOv2-S (frozen) ++ TinyCNN(AvgPool+MaxPool, 192) -> VisionProj -> vision_emb(256)
+  ++  MetaMLP(11->16)  ->  Classifier(272->256->128->1)  |  448px  |  67k dataset
+======================================================================
+Optimizer  : AdamW (lr=0.0003, wd=0.01)
+Schedule   : LinearWarmup(2ep) + CosineAnnealingLR (T_max=40)
+Early stop : patience=4 na eval(val) lossu  |  Max epochs: 150
+Batch size : 64
+Loss       : BCEJLoss (λ=0.9, tpr_weight=2.5)
+TinyCNN    : 297,024 param  |  VisionProj: 320,896  |  MetaMLP: 912  |  Classifier: 103,681
+Trainable ukupno: 722,513  (DINOv2-S frozen ~21M)
+Age stats  : mean=52.43  std=16.54  (iz train splita)
+
+======================================================================
+RUN: train (67k)  |  best_epoch=7  |  best_val_loss=1.4265  |  2029s
+Checkpoint: /home/datice/model_10_6/checkpoint_20260610_230527.pt
+======================================================================
+TRAIN (n=51597):
+  Acc=0.887  Prec=0.704  Rec=0.934  F1=0.803  TPR=0.934  FPR=0.128
+  Confusion matrix (count / %):
+                  Pred Benign        Pred Malignant
+  True Benign     33896 (65.7%)     4996 ( 9.7%)
+  True Malignant    835 ( 1.6%)    11870 (23.0%)
+
+VAL (n=5162):
+  Acc=0.879  Prec=0.693  Rec=0.912  F1=0.788  TPR=0.912  FPR=0.132
+  Confusion matrix (count / %):
+                  Pred Benign        Pred Malignant
+  True Benign      3377 (65.4%)      513 ( 9.9%)
+  True Malignant    112 ( 2.2%)     1160 (22.5%)
+
+TEST (n=10326):
+  Acc=0.876  Prec=0.687  Rec=0.912  F1=0.784  TPR=0.912  FPR=0.136
+  Confusion matrix (count / %):
+                  Pred Benign        Pred Malignant
+  True Benign      6724 (65.1%)     1057 (10.2%)
+  True Malignant    223 ( 2.2%)     2322 (22.5%)

@@ -1,0 +1,15 @@
+======================================================================
+DINOv2-S (frozen) ++ TinyCNN(AvgPool+MaxPool, 192) -> VisionProj -> vision_emb(256)
+  ++  MetaMLP(11->16)  ->  Classifier(272->256->128->1)  |  448px  |  67k dataset
+======================================================================
+Optimizer  : AdamW (lr=0.0003, wd=0.01)
+Schedule   : LinearWarmup(2ep) + CosineAnnealingLR (T_max=40)
+Early stop : patience=4 na eval(val) lossu  |  Max epochs: 150
+Batch size : 64
+Loss       : BCEJLoss (λ=0.9, tpr_weight=2.5)
+TinyCNN    : 297,024 param  |  VisionProj: 320,896  |  MetaMLP: 912  |  Classifier: 103,681
+Trainable ukupno: 722,513  (DINOv2-S frozen ~21M)
+Age stats  : mean=52.43  std=16.54  (iz train splita)
+
+  ep001  tr=1.3698  ev=1.7104  F1=0.667  TPR=0.970  FPR=0.307  (184s)
+  ep002  tr=0.8661  ev=1.5003  F1=0.749  TPR=0.939  FPR=0.186  (368s)
