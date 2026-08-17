@@ -1,0 +1,70 @@
+Device: cuda
+Checkpoint best_epoch=7  age_mean=52.43 age_std=16.54
+Mobile eval rows: 5240  malignant frac=0.717
+
+======================================================================
+MOBILE EVAL — WITH hair removal (matches training)
+======================================================================
+  (inference 645s)  mean_prob=0.460
+
+ALL MOBILE (n=5240):
+  Acc=0.612  Prec=0.848  Rec=0.559  F1=0.674  TPR=0.559  FPR=0.253  AUC=0.728
+  Confusion (count / %):
+                  Pred Benign        Pred Malignant
+  True Benign      1108 (21.1%)      375 ( 7.2%)
+  True Malignant   1657 (31.6%)     2100 (40.1%)
+
+mobile whose derm-twin was in TEST (n=836):
+  Acc=0.614  Prec=0.867  Rec=0.556  F1=0.678  TPR=0.556  FPR=0.231  AUC=0.744
+  Confusion (count / %):
+                  Pred Benign        Pred Malignant
+  True Benign       173 (20.7%)       52 ( 6.2%)
+  True Malignant    271 (32.4%)      340 (40.7%)
+
+mobile whose derm-twin was in VAL (n=391):
+  Acc=0.609  Prec=0.869  Rec=0.552  F1=0.675  TPR=0.552  FPR=0.233  AUC=0.720
+  Confusion (count / %):
+                  Pred Benign        Pred Malignant
+  True Benign        79 (20.2%)       24 ( 6.1%)
+  True Malignant    129 (33.0%)      159 (40.7%)
+
+mobile whose derm-twin was in TRAIN (n=4013):
+  Acc=0.612  Prec=0.843  Rec=0.560  F1=0.673  TPR=0.560  FPR=0.259  AUC=0.725
+  Confusion (count / %):
+                  Pred Benign        Pred Malignant
+  True Benign       856 (21.3%)      299 ( 7.5%)
+  True Malignant   1257 (31.3%)     1601 (39.9%)
+
+======================================================================
+MOBILE EVAL — WITHOUT hair removal (mobile-appropriate)
+======================================================================
+  (inference 15s)  mean_prob=0.642
+
+ALL MOBILE (n=5240):
+  Acc=0.727  Prec=0.824  Rec=0.787  F1=0.805  TPR=0.787  FPR=0.425  AUC=0.748
+  Confusion (count / %):
+                  Pred Benign        Pred Malignant
+  True Benign       853 (16.3%)      630 (12.0%)
+  True Malignant    799 (15.2%)     2958 (56.5%)
+
+mobile whose derm-twin was in TEST (n=836):
+  Acc=0.736  Prec=0.852  Rec=0.773  F1=0.810  TPR=0.773  FPR=0.364  AUC=0.775
+  Confusion (count / %):
+                  Pred Benign        Pred Malignant
+  True Benign       143 (17.1%)       82 ( 9.8%)
+  True Malignant    139 (16.6%)      472 (56.5%)
+
+mobile whose derm-twin was in VAL (n=391):
+  Acc=0.708  Prec=0.827  Rec=0.764  F1=0.794  TPR=0.764  FPR=0.447  AUC=0.733
+  Confusion (count / %):
+                  Pred Benign        Pred Malignant
+  True Benign        57 (14.6%)       46 (11.8%)
+  True Malignant     68 (17.4%)      220 (56.3%)
+
+mobile whose derm-twin was in TRAIN (n=4013):
+  Acc=0.727  Prec=0.819  Rec=0.793  F1=0.806  TPR=0.793  FPR=0.435  AUC=0.745
+  Confusion (count / %):
+                  Pred Benign        Pred Malignant
+  True Benign       653 (16.3%)      502 (12.5%)
+  True Malignant    592 (14.8%)     2266 (56.5%)
+
