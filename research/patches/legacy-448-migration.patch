@@ -1,0 +1,233 @@
+diff --git a/configs/default.yaml b/configs/default.yaml
+index cbbdb62..d400e7d 100644
+--- a/configs/default.yaml
++++ b/configs/default.yaml
+@@ -6,21 +6,21 @@ dataset:
+ model:
+   # Primary model: custom CNN trained from scratch (6.7M params)
+   name: "CustomCNN"
+-  input_size: [224, 224]
++  input_size: [448, 448]
+ 
+   # Alternative: pretrained EfficientNet-B0 with custom head
+   # name: "PretrainedEfficientNet"
+ 
+ preprocessing:
+-  target_size: [200, 200]          # for dataset preparation
+-  inference_size: [224, 224]       # for model input
++  target_size: [448, 448]          # for dataset preparation (izbjegavamo upscale kasnije)
++  inference_size: [448, 448]       # for model input
+   first_resize: [1200, 800]       # intermediate resize before hair removal
+   hair_kernel_size: 25
+   ita_subregion_fraction: 0.2
+ 
+ training:
+   epochs: 35
+-  batch_size: 128
++  batch_size: 32
+   learning_rate: 0.00003           # 3e-5
+   optimizer: "adamw"
+   class_weights: [0.5, 8.0]
+diff --git a/scripts/preprocess_dataset.py b/scripts/preprocess_dataset.py
+index b44321f..9308289 100644
+--- a/scripts/preprocess_dataset.py
++++ b/scripts/preprocess_dataset.py
+@@ -40,7 +40,7 @@ def main():
+     parser.add_argument("--duplicates", required=True, help="2020_Challenge_duplicates.csv")
+     parser.add_argument("--output", default="preprocessed", help="Output folder (default: preprocessed)")
+     parser.add_argument("--percent", type=float, default=1.0, help="Fraction of images to use (default: 1.0)")
+-    parser.add_argument("--target-size", type=int, default=200, help="Output image size (default: 200)")
++    parser.add_argument("--target-size", type=int, default=448, help="Output image size (default: 448)")
+     parser.add_argument("--num-folds", type=int, default=5, help="Number of k-folds (default: 5)")
+     parser.add_argument("--max-class0", type=int, default=20, help="Max class-0 images per patient (default: 20)")
+     parser.add_argument("--no-parallel", action="store_true", help="Disable parallel processing")
+@@ -53,7 +53,9 @@ def main():
+ 
+     # Load data
+     duplicates_df = pd.read_csv(args.duplicates)
+-    duplicates_set = set(duplicates_df["ISIC_id_paired"].tolist())
++    # CSV has pairs (image_name_1, image_name_2) — drop the second of each pair
++    dup_col = "ISIC_id_paired" if "ISIC_id_paired" in duplicates_df.columns else "image_name_2"
++    duplicates_set = set(duplicates_df[dup_col].tolist())
+     df = pd.read_csv(args.labels)
+ 
+     # Sample
+diff --git a/src/lumen/inference.py b/src/lumen/inference.py
+index 3365a64..0bdb618 100644
+--- a/src/lumen/inference.py
++++ b/src/lumen/inference.py
+@@ -47,7 +47,7 @@ def apply_gradcam(model, input_tensor, target_layer):
+         target_layer: The convolutional layer to visualize (e.g. model.features[-1]).
+ 
+     Returns:
+-        (cam, class_idx) — normalized [0, 1] CAM array resized to 224x224,
++        (cam, class_idx) — normalized [0, 1] CAM array resized to 448x448,
+         and the predicted class index.
+     """
+     model.eval()
+@@ -78,7 +78,7 @@ def apply_gradcam(model, input_tensor, target_layer):
+     cam = np.maximum(cam, 0)
+     cam = cam - np.min(cam)
+     cam = cam / (np.max(cam) + 1e-8)
+-    cam = cv2.resize(cam, (224, 224))
++    cam = cv2.resize(cam, (448, 448))
+ 
+     handle_fwd.remove()
+     handle_bwd.remove()
+diff --git a/src/lumen/model.py b/src/lumen/model.py
+index 48c5641..e2d02ea 100644
+--- a/src/lumen/model.py
++++ b/src/lumen/model.py
+@@ -18,7 +18,7 @@ class CustomCNN(nn.Module):
+ 
+     Architecture: 4 conv blocks with BatchNorm + SiLU activations, progressive
+     dropout, followed by a 3-layer classifier head. Outputs raw logits.
+-    Expects 224x224 RGB input.
++    Expects 448x448 RGB input.
+     """
+ 
+     def __init__(self):
+@@ -50,7 +50,7 @@ class CustomCNN(nn.Module):
+ 
+         self.classifier = nn.Sequential(
+             nn.Flatten(),
+-            nn.Linear(128 * 14 * 14, 256),
++            nn.Linear(128 * 28 * 28, 256),
+             nn.ReLU(),
+             nn.Dropout(0.4),
+             nn.Linear(256, 84),
+diff --git a/src/lumen/preprocessing.py b/src/lumen/preprocessing.py
+index a65b81f..91e7229 100644
+--- a/src/lumen/preprocessing.py
++++ b/src/lumen/preprocessing.py
+@@ -27,19 +27,20 @@ def check_resize(in_image, min_side=400, aspect_range=(1.0, 2.0)):
+     return aspect_range[0] <= ratio <= aspect_range[1]
+ 
+ 
+-def remove_hair(in_image):
++def remove_hair(in_image, kernel_size=25):
+     """Remove dark hair artifacts using black-hat morphology + inpainting.
+ 
+     Args:
+         in_image: RGB image as numpy array. The pipeline standardises on RGB
+             after the entry-point conversion in ``preprocess_*`` callers.
++        kernel_size: Structuring element size; should scale with image resolution.
+ 
+     Returns:
+         (hair_mask, inpainted_img) — binary mask of detected hair pixels,
+         and the cleaned image (same color space as input).
+     """
+     gray = cv2.cvtColor(in_image, cv2.COLOR_RGB2GRAY)
+-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (25, 25))
++    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (kernel_size, kernel_size))
+     blackhat = cv2.morphologyEx(gray, cv2.MORPH_BLACKHAT, kernel)
+     _, hair_mask = cv2.threshold(blackhat, 20, 255, cv2.THRESH_BINARY)
+     inpainted_img = cv2.inpaint(in_image, hair_mask, inpaintRadius=10, flags=cv2.INPAINT_TELEA)
+@@ -63,11 +64,13 @@ def square_crop(image):
+     return cropped
+ 
+ 
+-def preprocess(image, target_size=(224, 224), compute_ita=True):
+-    """Full preprocessing pipeline: square crop -> resize 800 -> hair removal -> resize -> ITA.
++def preprocess(image, target_size=(448, 448), compute_ita=True):
++    """Full preprocessing pipeline: square crop -> resize -> hair removal -> resize -> ITA.
+ 
+     Square crop happens on the input image before any resize, preserving
+-    aspect ratio for non-3:2 inputs. Matches slavica's evaluate.py order.
++    aspect ratio for non-3:2 inputs. The intermediate resize for hair removal
++    scales with target_size to maintain a ~2x quality margin above the final
++    output, ensuring hair removal operates on genuinely high-resolution data.
+ 
+     Args:
+         image: RGB image as numpy array (any size).
+@@ -82,8 +85,13 @@ def preprocess(image, target_size=(224, 224), compute_ita=True):
+             processed_image only.
+     """
+     cropped = square_crop(image)
+-    sq800 = cv2.resize(cropped, (800, 800), interpolation=cv2.INTER_AREA)
+-    _, hairless = remove_hair(sq800)
++    # Intermediate size for hair removal: at least 2x target, minimum 800.
++    # Kernel scales proportionally so hair detection stays resolution-aware.
++    intermed = max(800, target_size[0] * 2)
++    raw_kernel = round(25 * intermed / 800)
++    hair_kernel = raw_kernel if raw_kernel % 2 == 1 else raw_kernel + 1
++    sq_large = cv2.resize(cropped, (intermed, intermed), interpolation=cv2.INTER_AREA)
++    _, hairless = remove_hair(sq_large, kernel_size=hair_kernel)
+     resized = cv2.resize(hairless, target_size, interpolation=cv2.INTER_LANCZOS4)
+ 
+     if not compute_ita:
+@@ -109,7 +117,7 @@ def _load_rgb(image_path):
+     return cv2.cvtColor(orig, cv2.COLOR_BGR2RGB)
+ 
+ 
+-def preprocess_from_path(image_path, target_size=(200, 200)):
++def preprocess_from_path(image_path, target_size=(448, 448)):
+     """Load image from disk and run the full pipeline (with ITA metadata).
+ 
+     Used by the batch dataset-preparation script.
+@@ -131,7 +139,7 @@ def preprocess_from_path(image_path, target_size=(200, 200)):
+     return preprocess(rgb, target_size=target_size, compute_ita=True)
+ 
+ 
+-def preprocess_for_inference(image_path, target_size=(224, 224)):
++def preprocess_for_inference(image_path, target_size=(448, 448)):
+     """Load + preprocess an image for model inference (no ITA).
+ 
+     Returns:
+@@ -163,7 +171,7 @@ def _preprocess_for_inference_single(full_path):
+     return (image_name, processed)
+ 
+ 
+-def parallel_preprocess(image_paths, num_processes=None, target_size=(200, 200)):
++def parallel_preprocess(image_paths, num_processes=None, target_size=(448, 448)):
+     """Run preprocess_from_path in parallel across multiple images.
+ 
+     Args:
+diff --git a/src/lumen/training/dataset.py b/src/lumen/training/dataset.py
+index f758470..b4f539f 100644
+--- a/src/lumen/training/dataset.py
++++ b/src/lumen/training/dataset.py
+@@ -19,7 +19,7 @@ from sklearn.utils.class_weight import compute_class_weight
+ from lumen.training.augmentation import augment
+ 
+ 
+-def load_and_prepare_image(im_name, fold_id, base_dir, target_size=(224, 224)):
++def load_and_prepare_image(im_name, fold_id, base_dir, target_size=(448, 448)):
+     """Load a preprocessed image from the fold directory structure.
+ 
+     Args:
+@@ -100,7 +100,7 @@ class SkinImageDataset(Dataset):
+         augm_needed: Number of augmented copies per class-1 image.
+     """
+ 
+-    def __init__(self, metadata, folds_to_include, base_dir, img_size=(224, 224),
++    def __init__(self, metadata, folds_to_include, base_dir, img_size=(448, 448),
+                  mode="train", augm_needed=1):
+         self.samples = []
+         self.mode = mode
+diff --git a/src/lumen/training/trainer.py b/src/lumen/training/trainer.py
+index 284d511..6dc7a5c 100644
+--- a/src/lumen/training/trainer.py
++++ b/src/lumen/training/trainer.py
+@@ -92,7 +92,7 @@ def k_fold_training(
+     Returns:
+         (model, history) — trained model with best weights, and training history dict.
+     """
+-    img_size = (224, 224)
++    img_size = (448, 448)
+     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+     print(f"Device: {device}")
+ 
+diff --git a/web_app/backend/router.py b/web_app/backend/router.py
+index bd81c48..4220ba6 100644
+--- a/web_app/backend/router.py
++++ b/web_app/backend/router.py
+@@ -65,7 +65,7 @@ async def process_image(request: Request, file: UploadFile = File(...)):
+         }))
+ 
+         # 3) Resize + ITA / skin group
+-        TS = (224, 224)
++        TS = (448, 448)
+         processed_img = cv2.resize(inpainted, TS, interpolation=cv2.INTER_LANCZOS4)
+         avg_ita, _ = calculate_ita_subregions(processed_img)
+         skin_group = get_fitzpatrick_label(avg_ita)
