@@ -1,6 +1,6 @@
 // Metadata option lists for the predictor.
 // Values MUST match the model's SEX_CATEGORIES / SITE_CATEGORIES exactly
-// (from the najbolji_10_6.pt checkpoint config) — the backend one-hot encodes
+// (from the najbolji_10_6.pt checkpoint config), the backend one-hot encodes
 // against these strings, so a mismatch silently degrades to "unknown".
 
 export const SEX_OPTIONS = [

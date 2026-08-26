@@ -7,7 +7,7 @@
           <h2>Track a mole over time</h2>
           <p class="lead">
             Save any analysis to a mole and watch how it changes across weeks and months.
-            Everything stays in this browser — nothing is uploaded.
+            Everything stays in this browser, nothing is uploaded.
           </p>
         </div>
 
@@ -85,10 +85,10 @@ function latest(mole) {
   return s.length ? s[s.length - 1] : null
 }
 function pct(e) {
-  return e && e.probability != null ? `${Math.round(e.probability * 100)}%` : '—'
+  return e && e.probability != null ? `${Math.round(e.probability * 100)}%` : '–'
 }
 function fmt(dateStr) {
-  if (!dateStr) return '—'
+  if (!dateStr) return '–'
   const [y, m, d] = dateStr.split('-').map(Number)
   return new Date(y, (m || 1) - 1, d || 1).toLocaleDateString(undefined, {
     year: 'numeric',

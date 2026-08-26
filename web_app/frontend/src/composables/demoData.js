@@ -1,5 +1,5 @@
 // Sample-run imagery for the "Watch a sample run" demo.
-// Everything here is clearly-synthetic placeholder art — no real patient data
+// Everything here is clearly-synthetic placeholder art, no real patient data
 // and no real inference. The UI labels it as a demo so it can't be mistaken
 // for a genuine analysis.
 

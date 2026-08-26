@@ -5,7 +5,7 @@
       <div class="col brandcol">
         <BrandLogo :size="28" />
         <p class="tag">
-          Skin-lesion analysis that shows its work — every step from photo to
+          Skin-lesion analysis that shows its work: every step from photo to
           verdict, out in the open.
         </p>
       </div>
@@ -32,7 +32,7 @@
       </div>
 
       <div class="col">
-        <h4>Team Datice</h4>
+        <h4>Team</h4>
         <span>Jurica Jerinić</span>
         <span>Filip Hlup</span>
         <span>Tomislav Matanović</span>
@@ -42,10 +42,10 @@
 
     <div class="shell base">
       <p class="disclaimer">
-        Educational and research use only. Datice is not a medical device and does not
+        Educational and research use only. This tool is not a medical device and does not
         replace a dermatologist.
       </p>
-      <p class="copy">© 2025 Datice</p>
+      <p class="copy">© 2025</p>
     </div>
   </footer>
 </template>

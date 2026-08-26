@@ -46,7 +46,7 @@ const swatches = [
 const ROMAN = { I: 1, II: 2, III: 3, IV: 4, V: 5, VI: 6 }
 
 // backend sends e.g. "III (Intermediate)"
-const roman = computed(() => (props.skinGroup.split('(')[0] || '').trim() || '—')
+const roman = computed(() => (props.skinGroup.split('(')[0] || '').trim() || '–')
 const desc = computed(() => {
   const m = props.skinGroup.match(/\(([^)]+)\)/)
   return m ? m[1] : ''

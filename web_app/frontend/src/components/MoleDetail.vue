@@ -67,7 +67,7 @@
         </div>
       </div>
       <p class="hint">
-        Compare the photos with your own eyes — colour, border, and size. The % is the
+        Compare the photos with your own eyes: colour, border, and size. The % is the
         model’s read, not a measurement of the mole.
       </p>
     </section>
@@ -149,7 +149,7 @@ const deltaVal = computed(() => {
   return Math.round((entryB.value.probability - entryA.value.probability) * 100)
 })
 const deltaLabel = computed(() => {
-  if (deltaVal.value == null) return '—'
+  if (deltaVal.value == null) return '–'
   const v = deltaVal.value
   return `${v > 0 ? '+' : ''}${v} pts`
 })
@@ -158,7 +158,7 @@ const deltaClass = computed(() =>
 )
 
 function pct(e) {
-  return e.probability == null ? '—' : `${Math.round(e.probability * 100)}%`
+  return e.probability == null ? '–' : `${Math.round(e.probability * 100)}%`
 }
 function roman(sg) {
   return (sg.split('(')[0] || '').trim()
@@ -167,7 +167,7 @@ function metaOf(e) {
   return metadataSummary(e.metadata)
 }
 function fmt(dateStr) {
-  if (!dateStr) return '—'
+  if (!dateStr) return '–'
   const [y, m, d] = dateStr.split('-').map(Number)
   const dt = new Date(y, (m || 1) - 1, d || 1)
   return dt.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })

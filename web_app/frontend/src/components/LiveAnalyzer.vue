@@ -60,7 +60,7 @@
                     min="0"
                     max="120"
                     inputmode="numeric"
-                    placeholder="—"
+                    placeholder="–"
                   />
                 </label>
                 <label class="mfield">
@@ -128,7 +128,7 @@
               </summary>
 
               <ul class="shot-list">
-                <li>Use bright, even light — no harsh flash glare.</li>
+                <li>Use bright, even light, no harsh flash glare.</li>
                 <li>Fill the frame with the spot, kept in the centre.</li>
                 <li>Hold steady, about 10&nbsp;cm away, until it's sharp.</li>
                 <li>Clear hair off the spot and avoid casting shadows.</li>
@@ -218,7 +218,7 @@
           <!-- STREAMING / DONE -->
           <div v-else key="result" class="result">
             <div v-if="state.isDemo" class="demo-banner">
-              <strong>Sample walkthrough</strong> — synthetic placeholder data, not a real
+              <strong>Sample walkthrough</strong>: synthetic placeholder data, not a real
               analysis. Upload a photo for a genuine read.
             </div>
 
@@ -248,7 +248,7 @@
                   stroke-width="1.7" stroke-linecap="round" />
               </svg>
               <span v-if="reasonedSummary">Reasoned with <strong>{{ reasonedSummary }}</strong></span>
-              <span v-else>Based on the image alone — add age, sex, or body site above for a sharper read.</span>
+              <span v-else>Based on the image alone. Add age, sex, or body site above for a sharper read.</span>
             </p>
 
             <div v-if="camBase && state.steps.gradcam" class="cam-block">
@@ -323,8 +323,8 @@ const mode = ref('phone')
 // Copy that adapts to the selected mode.
 const leadText = computed(() =>
   mode.value === 'derm'
-    ? 'Upload a dermatoscopic image of a lesion. Datice runs the dermatoscope-trained model and streams every step of its reasoning — the cleanup, the skin-tone read, the call, and where it looked. Nothing is hidden behind a single score.'
-    : 'Upload a clear phone photo of a skin spot. Datice streams every step of its reasoning as it runs — the cleanup, the skin-tone read, the call, and where it looked. Nothing is hidden behind a single score.',
+    ? 'Upload a dermatoscopic image of a lesion. The tool runs the dermatoscope-trained model and streams every step of its reasoning: the cleanup, the skin-tone read, the call, and where it looked. Nothing is hidden behind a single score.'
+    : 'Upload a clear phone photo of a skin spot. The tool streams every step of its reasoning as it runs, the cleanup, the skin-tone read, the call, and where it looked. Nothing is hidden behind a single score.',
 )
 const dropSub = computed(() =>
   mode.value === 'derm'
@@ -334,7 +334,7 @@ const dropSub = computed(() =>
 const tipText = computed(() =>
   mode.value === 'derm'
     ? 'Your image is analysed on the fly and never stored. Dermatoscope images give the most confident read.'
-    : 'Your image is analysed on the fly and never stored. Clear, well-lit phone photos work best — switch to Dermatoscope above if you have a dermatoscope image.',
+    : 'Your image is analysed on the fly and never stored. Clear, well-lit phone photos work best. Switch to Dermatoscope above if you have a dermatoscope image.',
 )
 
 // Optional metadata the user can add before analyzing.

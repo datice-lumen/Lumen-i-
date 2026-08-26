@@ -71,7 +71,7 @@ export function useAnalyzer() {
         break
       case 'preprocess':
         state.skinGroup = p.skin_group
-        // backend also streams the processed image — surface it here
+        // backend also streams the processed image, surface it here
         if (p.processed_image) state.steps.processed = png(p.processed_image)
         break
       case 'model_prediction':

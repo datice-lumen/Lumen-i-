@@ -33,12 +33,12 @@
     <p class="read">
       The model puts the chance this is malignant at <strong>{{ percent }}%</strong>.
       {{ malignant
-        ? 'That crosses its threshold — have a dermatologist take a look.'
+        ? 'That crosses its threshold. Have a dermatologist take a look.'
         : 'That sits below its threshold, but keep an eye on any change.' }}
     </p>
 
     <p class="fineprint">
-      Datice is a research tool, not a diagnosis. When in doubt, see a clinician.
+      This is a research tool, not a diagnosis. When in doubt, see a clinician.
     </p>
   </div>
 </template>
