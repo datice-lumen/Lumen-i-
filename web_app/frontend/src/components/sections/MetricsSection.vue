@@ -5,8 +5,9 @@
         <p class="eyebrow">Results</p>
         <h2>Measured on held-out test data</h2>
         <p class="lead">
-          A custom CNN trained from scratch — 6.7M parameters, no pretrained backbone.
-          Here's how it scores on lesions it never saw during training.
+          A frozen DINOv2 backbone paired with a small trainable vision and metadata
+          head — 722k trained parameters. Here's how it scores on the 10,326 held-out
+          lesions it never saw during training.
         </p>
       </header>
 
@@ -34,11 +35,14 @@
 <script setup>
 import { onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 
+// Test-set figures for the served dermatoscopic checkpoint (model_10_6, n=10,326).
+// Source of truth: docs/training/model_10_6_logs/results_20260610_230527.txt.
+// Keep these in sync with that file — they are quoted in the paper as well.
 const metrics = [
-  { key: 'auc', value: 0.86, label: 'AUC', note: 'Ranks malignant above benign 86% of the time.', higherBetter: true },
-  { key: 'acc', value: 0.83, label: 'Accuracy', note: 'Overall correct calls on the test set.', higherBetter: true },
-  { key: 'tpr', value: 0.69, label: 'Sensitivity', note: 'Share of true melanomas it catches.', higherBetter: true },
-  { key: 'fpr', value: 0.16, label: 'False-positive rate', note: 'Benign lesions it flags by mistake.', higherBetter: false },
+  { key: 'tpr', value: 0.912, label: 'Sensitivity', note: 'Share of true malignancies it catches.', higherBetter: true },
+  { key: 'acc', value: 0.876, label: 'Accuracy', note: 'Overall correct calls on the test set.', higherBetter: true },
+  { key: 'prec', value: 0.687, label: 'Precision', note: 'Share of its malignant calls that are right.', higherBetter: true },
+  { key: 'fpr', value: 0.136, label: 'False-positive rate', note: 'Benign lesions it flags by mistake.', higherBetter: false },
 ]
 
 const root = ref(null)

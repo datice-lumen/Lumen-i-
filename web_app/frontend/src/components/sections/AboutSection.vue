@@ -7,8 +7,9 @@
           <h2>Open source, and it shows its work</h2>
           <p>
             <strong>Datice</strong> is a melanoma screening tool built around one idea: a model
-            you can see into. Rather than fine-tuning a black box, we trained a custom CNN from
-            scratch — so every stage, from photo to verdict, is ours to inspect and explain.
+            you can see into. A frozen DINOv2 backbone does the heavy lifting, and everything
+            on top of it is ours — so every stage, from photo to verdict, is open to inspect
+            and explain.
           </p>
           <p>
             Every stage of the pipeline, the model architecture, and the training code are
@@ -18,16 +19,16 @@
 
           <div class="facts">
             <div class="fact">
-              <span class="fv">6.7M</span>
-              <span class="fl">parameters, from scratch</span>
+              <span class="fv">722k</span>
+              <span class="fl">trained parameters</span>
             </div>
             <div class="fact">
-              <span class="fv">33k+</span>
+              <span class="fv">67k</span>
               <span class="fl">training images</span>
             </div>
             <div class="fact">
-              <span class="fv">5-fold</span>
-              <span class="fl">patient-level splits</span>
+              <span class="fv">patient-level</span>
+              <span class="fl">train / val / test splits</span>
             </div>
           </div>
 

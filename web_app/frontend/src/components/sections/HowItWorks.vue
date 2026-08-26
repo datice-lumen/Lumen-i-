@@ -47,7 +47,7 @@ const steps = [
   },
   {
     title: 'Classify',
-    body: 'A custom 6.7M-parameter CNN, trained from scratch, returns the probability the lesion is malignant.',
+    body: 'A frozen DINOv2 backbone and a small trainable head fuse the image with your age, sex and body site, and return the probability the lesion is malignant.',
     icon: `<svg viewBox="0 0 24 24" width="22" height="22"><circle cx="6" cy="7" r="2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="6" cy="17" r="2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="18" cy="12" r="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 7c5 0 5 5 8 5M8 17c5 0 5-5 8-5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>`,
   },
   {

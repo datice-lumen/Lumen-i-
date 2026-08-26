@@ -44,3 +44,21 @@ Thumbs.db
 # Environment
 .env
 .env.*
+
+# Claude Code local settings (per-machine permissions)
+.claude/settings.local.json
+
+# Paper (Rektorova nagrada) working artifacts — LaTeX build output, backups, packaged skills
+docs/latex/*.aux
+docs/latex/*.bbl
+docs/latex/*.bcf
+docs/latex/*.blg
+docs/latex/*.fdb_latexmk
+docs/latex/*.fls
+docs/latex/*.log
+docs/latex/*.out
+docs/latex/*.run.xml
+docs/latex/*.toc
+docs/latex/*.zip
+*.docx.bak
+*.skill

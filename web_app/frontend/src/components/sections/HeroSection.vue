@@ -26,7 +26,7 @@
         <ul class="chips">
           <li>Explainable by design</li>
           <li>Built for phone photos</li>
-          <li>0.86 AUC on held-out data</li>
+          <li>0.91 sensitivity on held-out data</li>
         </ul>
       </div>
 
