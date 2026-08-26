@@ -6,7 +6,7 @@
         <h2>Measured on held-out test data</h2>
         <p class="lead">
           A frozen DINOv2 backbone paired with a small trainable vision and metadata
-          head — 722k trained parameters. Here's how it scores on the 10,326 held-out
+          head with 722k trained parameters. Here's how it scores on the 10,326 held-out
           lesions it never saw during training.
         </p>
       </header>
@@ -37,7 +37,7 @@ import { onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 
 // Test-set figures for the served dermatoscopic checkpoint (model_10_6, n=10,326).
 // Source of truth: docs/training/model_10_6_logs/results_20260610_230527.txt.
-// Keep these in sync with that file — they are quoted in the paper as well.
+// Keep these in sync with that file, they are quoted in the paper as well.
 const metrics = [
   { key: 'tpr', value: 0.912, label: 'Sensitivity', note: 'Share of true malignancies it catches.', higherBetter: true },
   { key: 'acc', value: 0.876, label: 'Accuracy', note: 'Overall correct calls on the test set.', higherBetter: true },

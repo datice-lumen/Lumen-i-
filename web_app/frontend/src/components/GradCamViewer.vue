@@ -42,7 +42,7 @@
       </div>
     </div>
     <figcaption>
-      Drag the beam to sweep light across the lesion — the warm zone is where the
+      Drag the beam to sweep light across the lesion. The warm zone is where the
       model concentrated to reach its call.
     </figcaption>
   </figure>

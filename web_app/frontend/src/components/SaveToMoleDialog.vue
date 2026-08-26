@@ -92,7 +92,7 @@ const saving = ref(false)
 const error = ref('')
 
 const percent = computed(() =>
-  props.probability == null ? '—' : Math.round(props.probability * 100),
+  props.probability == null ? '–' : Math.round(props.probability * 100),
 )
 const roman = computed(() => (props.skinGroup.split('(')[0] || '').trim())
 const canSave = computed(() =>

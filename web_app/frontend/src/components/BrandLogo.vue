@@ -4,7 +4,7 @@
       class="mark"
       viewBox="0 0 40 40"
       role="img"
-      aria-label="Datice"
+      aria-label="Skin-lesion analysis"
       focusable="false"
     >
       <defs>
@@ -26,7 +26,6 @@
         <line x1="34.5" y1="20" x2="38.5" y2="20" />
       </g>
     </svg>
-    <span v-if="withWordmark" class="word">Datice</span>
   </span>
 </template>
 

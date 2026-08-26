@@ -5,8 +5,8 @@
         <p class="eyebrow">How it works</p>
         <h2>Five steps, all in the open</h2>
         <p class="lead">
-          Most tools hand you a single number. Datice shows every stage between a photo
-          and its verdict — because a screening call you can inspect is one you can trust.
+          Most tools hand you a single number. This one shows every stage between a photo
+          and its verdict, because a screening call you can inspect is one you can trust.
         </p>
       </header>
 
@@ -32,12 +32,12 @@
 const steps = [
   {
     title: 'Square & focus',
-    body: 'The photo is cropped to a centred square so the lesion fills the frame the model expects — phone shot or dermatoscope alike.',
+    body: 'The photo is cropped to a centred square so the lesion fills the frame the model expects, phone shot or dermatoscope alike.',
     icon: `<svg viewBox="0 0 24 24" width="22" height="22"><rect x="4" y="4" width="16" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>`,
   },
   {
     title: 'Remove hair',
-    body: 'Black-hat filtering detects hair strands, then inpainting paints them out — so the model reads skin, not artefacts.',
+    body: 'Black-hat filtering detects hair strands, then inpainting paints them out, so the model reads skin, not artefacts.',
     icon: `<svg viewBox="0 0 24 24" width="22" height="22"><path d="M4 18c4-10 12-10 16 0M7 6c3 4 7 4 10 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`,
   },
   {
@@ -52,7 +52,7 @@ const steps = [
   },
   {
     title: 'Explain',
-    body: 'Grad-CAM turns the model’s attention into a heatmap, so you can see the exact region that drove the call — not just the score.',
+    body: 'Grad-CAM turns the model’s attention into a heatmap, so you can see the exact region that drove the call, not just the score.',
     icon: `<svg viewBox="0 0 24 24" width="22" height="22"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>`,
   },
 ]

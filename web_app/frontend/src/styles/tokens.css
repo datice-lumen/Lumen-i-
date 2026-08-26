@@ -1,7 +1,7 @@
 /* =========================================================================
-   Datice — design tokens & base styles
+   Design tokens & base styles
    Thesis: "light through skin". The warm coral/amber palette is the colour
-   of light scattering through human tissue — not a generic cream theme.
+   of light scattering through human tissue, not a generic cream theme.
    ========================================================================= */
 
 :root {
@@ -152,7 +152,7 @@ img {
   background: rgba(244, 114, 107, 0.24);
 }
 
-/* focus visibility — part of the quality floor */
+/* focus visibility, part of the quality floor */
 :focus-visible {
   outline: 3px solid var(--coral);
   outline-offset: 2px;

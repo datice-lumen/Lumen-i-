@@ -7,8 +7,8 @@
           See your skin<br />in a <span class="text-gradient">new light</span>.
         </h1>
         <p class="sub">
-          Datice reads a skin-lesion photo, tells you whether it's worth a closer look,
-          and shows exactly how it got there — hair cleared, skin tone read, and the
+          The tool reads a skin-lesion photo, tells you whether it's worth a closer look,
+          and shows exactly how it got there: hair cleared, skin tone read, and the
           precise pixels it focused on. Every step, out in the open.
         </p>
 

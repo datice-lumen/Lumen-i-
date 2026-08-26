@@ -1,7 +1,7 @@
 <template>
   <header class="header" :class="{ scrolled }">
     <div class="shell bar">
-      <a href="#top" class="brand" aria-label="Datice home">
+      <a href="#top" class="brand" aria-label="Home">
         <BrandLogo :size="30" />
       </a>
 

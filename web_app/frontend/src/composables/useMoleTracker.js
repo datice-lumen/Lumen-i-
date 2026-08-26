@@ -3,7 +3,7 @@ import { computed, reactive, watch } from 'vue'
 // Single source of truth for tracked moles, persisted to localStorage only.
 // Shared across components via a module-scoped reactive singleton.
 
-const KEY = 'datice.moles.v1'
+const KEY = 'moles.v1'
 
 const state = reactive({
   moles: [],
@@ -28,7 +28,7 @@ function load() {
     const data = JSON.parse(raw)
     if (data && Array.isArray(data.moles)) state.moles = data.moles
   } catch {
-    // corrupt or unavailable storage — start empty rather than crash
+    // corrupt or unavailable storage: start empty rather than crash
     state.moles = []
   }
 }
@@ -38,7 +38,7 @@ function persist() {
     localStorage.setItem(KEY, JSON.stringify({ version: 1, moles: state.moles }))
     state.error = ''
   } catch {
-    state.error = 'Storage is full — delete some older checks to save new ones.'
+    state.error = 'Storage is full. Delete some older checks to save new ones.'
   }
 }
 

@@ -1,5 +1,5 @@
-// Naive UI theme overrides — keeps built-in components (upload, messages)
-// visually consistent with Datice's warm "light through skin" tokens.
+// Naive UI theme overrides, keeps built-in components (upload, messages)
+// visually consistent with the app's warm "light through skin" tokens.
 
 const fontBody =
   "'Hanken Grotesk Variable', 'Hanken Grotesk', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif"

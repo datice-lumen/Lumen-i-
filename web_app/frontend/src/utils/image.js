@@ -23,7 +23,7 @@ export async function downscaleToThumb(src, max = 512, quality = 0.72) {
   canvas.width = w
   canvas.height = h
   const ctx = canvas.getContext('2d')
-  // JPEG has no alpha — paint a white base so transparent PNGs don't go black
+  // JPEG has no alpha, paint a white base so transparent PNGs don't go black
   ctx.fillStyle = '#ffffff'
   ctx.fillRect(0, 0, w, h)
   ctx.drawImage(img, 0, 0, w, h)

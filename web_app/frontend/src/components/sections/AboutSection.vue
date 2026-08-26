@@ -6,9 +6,9 @@
           <p class="eyebrow">About</p>
           <h2>Open source, and it shows its work</h2>
           <p>
-            <strong>Datice</strong> is a melanoma screening tool built around one idea: a model
+            This is a melanoma screening tool built around one idea: a model
             you can see into. A frozen DINOv2 backbone does the heavy lifting, and everything
-            on top of it is ours — so every stage, from photo to verdict, is open to inspect
+            on top of it is ours, so every stage, from photo to verdict, is open to inspect
             and explain.
           </p>
           <p>
@@ -52,7 +52,7 @@
           </span>
           <h3>Not a medical diagnosis</h3>
           <p>
-            Datice is a research and education tool. It is not a certified medical device,
+            This is a research and education tool. It is not a certified medical device,
             has not been clinically validated, and can be wrong in both directions.
           </p>
           <p>
