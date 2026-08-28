@@ -33,10 +33,10 @@
           </div>
 
           <div class="links">
-            <a class="btn ghost" href="https://github.com/datice-lumen/Lumen-i-" target="_blank" rel="noopener">
+            <a class="btn ghost" href="https://github.com/datice1/skin-check" target="_blank" rel="noopener">
               View the code
             </a>
-            <a class="btn text" href="https://github.com/datice-lumen/Lumen-i-/wiki" target="_blank" rel="noopener">
+            <a class="btn text" href="https://github.com/datice1/skin-check/wiki" target="_blank" rel="noopener">
               Read the methodology →
             </a>
           </div>

@@ -20,11 +20,11 @@
 
       <div class="col">
         <h4>Project</h4>
-        <a href="https://github.com/datice-lumen/Lumen-i-" target="_blank" rel="noopener">
+        <a href="https://github.com/datice1/skin-check" target="_blank" rel="noopener">
           GitHub repository
         </a>
         <a
-          href="https://github.com/datice-lumen/Lumen-i-/wiki"
+          href="https://github.com/datice1/skin-check/wiki"
           target="_blank"
           rel="noopener"
           >Documentation</a

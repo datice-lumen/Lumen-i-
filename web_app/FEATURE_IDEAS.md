@@ -1,4 +1,4 @@
-# Lumen — Future Feature Ideas
+# Skin Check — Future Feature Ideas
 
 What users could do in the app once it supports both dermatoscope and phone-camera photos.
 

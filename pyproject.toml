@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "lumen"
 version = "0.1.0"
-description = "Fairness-driven melanoma classification"
+description = "Multimodal skin lesion screening: DINOv2-S + TinyCNN + clinical metadata"
 requires-python = ">=3.10"
 dependencies = [
     "torch>=2.0",

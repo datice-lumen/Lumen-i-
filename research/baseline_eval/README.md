@@ -1,6 +1,6 @@
-# baseline_eval — LUMEN baseline evaluation & refactor validation
+# baseline_eval — CustomCNN baseline evaluation & refactor validation
 
-Evaluation harness for the original LUMEN baseline model
+Evaluation harness for the original CustomCNN baseline model
 (`/home/datice/models/lumen_model.pth`, CustomCNN @ 224px) across all raw
 images from ISIC 2019, ISIC 2020 and MILK10k, plus tooling used to verify that
 the repo refactor reproduces slavica's reference predictions.

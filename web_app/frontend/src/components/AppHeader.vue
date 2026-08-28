@@ -16,7 +16,7 @@
       <div class="actions">
         <a
           class="ghost"
-          href="https://github.com/datice-lumen/Lumen-i-"
+          href="https://github.com/datice1/skin-check"
           target="_blank"
           rel="noopener"
         >

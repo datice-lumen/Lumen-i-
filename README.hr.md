@@ -1,158 +1,127 @@
-# Klasifikacija melanoma vođena pravednošću
+# Skin Check — multimodalni probir kožnih lezija
 
 [🇬🇧 English](README.md) | **🇭🇷 Hrvatski**
 
-Pristup dubokog CNN-a s ujednačenim performansama po tonu kože, razvijen za **Lumen Data Science Challenge 2025**.
+Multimodalni sustav dubokog učenja koji procjenjuje vjerojatnost da je kožna lezija maligna na temelju **dermatoskopske snimke ili fotografije mobitelom** te neobaveznih podataka o pacijentu (dob, spol, lokacija na tijelu), upakiran u web aplikaciju koja korisniku prikazuje svaki korak obrade.
 
-**Autori:** Jurica Jerinic, Filip Hlup, Tomislav Matanovic, Karlo Rastegorac
-**Grupa:** Datice
+**Autori:** Filip Hlup, Jurica Jerinić, Tomislav Matanović, Karlo Raštegorac
+**Mentor:** doc. dr. sc. Krešimir Križanović — Sveučilište u Zagrebu, Fakultet elektrotehnike i računarstva
+
+🌐 **Aplikacija:** https://datice-skin-checker.onrender.com/ · 📖 **Cjelovit rad:** [wiki projekta](https://github.com/datice1/skin-check/wiki)
 
 ## Pregled
 
-Projekt razvija robustan model dubokog učenja koji klasificira dermatoskopske slike kožnih lezija kao **benigne ili maligne**, s naglaskom na **pravednost među tonovima kože**. Model je prilagođeni CNN (6.7M parametara) treniran od nule na [ISIC 2020 skupu podataka](https://challenge2020.isic-archive.com/), uz loss funkciju svjesnu pravednosti baziranu na Equalized Odds.
+- **Podaci.** 67 085 dermatoskopskih slika objedinjenih iz skupova ISIC 2019, ISIC 2020 i MILK10k (24,6 % malignih), uz strogu podjelu na razini pacijenta (10/13 treniranje, 1/13 validacija, 2/13 test) za koju je provjereno da svaku leziju drži u jednom podskupu.
+- **Model.** Zamrznuta okosnica **DINOv2-S** (globalni kontekst, 384 dim.) radi paralelno s malom treniranom mrežom **TinyCNN** (lokalna tekstura, 192 dim.); spojeni vektor od 576 dim. projicira se na 256 i ulančava sa 16-dimenzionalnim kodiranjem dobi, spola i lokacije iz **MetaMLP**-a. Trenira se samo 722 513 parametara.
+- **Funkcija gubitka.** `BCE + λ·(meki FPR + w·(1 − meki TPR))` uz λ = 0,9 i w = 2,5 — meka, asimetrično ponderirana inačica Youdenova indeksa koja propušten malignom kažnjava 2,5 puta jače od lažnog alarma.
+- **Prilagodba mobilnim slikama.** Na fotografijama mobitelom osjetljivost dermatoskopskog modela pada s 0,912 na 0,559. Isključivanjem uklanjanja dlačica i finim podešavanjem glava na mobilnim slikama iz MILK10k (DINOv2 ostaje zamrznut) osjetljivost na neviđenom mobilnom testu raste na 0,925.
+- **Web aplikacija.** Vue 3 + FastAPI. Jedan zahtjev strujanjem (SSE) vraća korake obrade: kvadratni izrez → uklanjanje dlačica (samo dermatoskopski način) → procjena tona kože (ITA → Fitzpatrick) → predikcija → Grad-CAM. Jednoklasni detektor nad DINOv2 značajkama odbija slike koje nisu bliski snimak kože. Povijest lezija živi isključivo u pregledniku; na poslužitelju se ništa ne pohranjuje.
 
-| Metrika | Rezultat na testu |
-|--------|-----------|
-| Točnost | 0.83 |
-| AUC | 0.86 |
-| TPR (osjetljivost) | 0.69 |
-| FPR | 0.16 |
-| Equalized Odds Gap | 0.51 |
-
-Dostupna je i [web aplikacija uživo](https://lumen-i.onrender.com) za interaktivne predikcije s Grad-CAM objašnjivošću.
+| Metrika | Dermatoskopski test (n = 10 326) | Mobilni test (n = 836) |
+|---|---:|---:|
+| Osjetljivost / TPR | **0,912** | **0,925** |
+| FPR | 0,136 | 0,378 |
+| Točnost | 0,876 | 0,843 |
+| Preciznost | 0,687 | 0,869 |
+| F1 | 0,784 | 0,896 |
+| AUC | ≈ 0,94 | 0,844 |
 
 ## Struktura repozitorija
 
 ```
-src/lumen/                        # Glavni Python paket (pip install -e .)
-  preprocessing.py                # Uklanjanje dlaka, izrezivanje, resize
-  skin_tone.py                    # ITA i Fitzpatrick mapiranje
-  model.py                        # CustomCNN + PretrainedEfficientNet arhitekture
-  inference.py                    # Priprema tenzora, predikcija, Grad-CAM
-  folding.py                      # Trostruko stratificirano k-struko dijeljenje
-  training/                       # Moduli specifični za treniranje
-    loss.py                       # Prilagođena loss funkcija svjesna pravednosti
-    augmentation.py               # Transformacije za augmentaciju podataka
-    dataset.py                    # PyTorch Dataset s paralelnim učitavanjem
-    evaluation.py                 # Metrike, evaluacija pravednosti, crtanje
-    trainer.py                    # Petlja treniranja s early stoppingom
-
-scripts/                          # CLI ulazne točke
-  preprocess_dataset.py           # Batch predobrada skupa podataka
-  predict.py                      # Batch inferencija
-  train.py                        # Treniranje modela
-
-configs/default.yaml              # Konfiguracija treniranja/inferencije
+src/lumen/                  Glavni Python paket (pip install -e .)
+  model_meta.py             Spojeni model DINOv2-S + TinyCNN + MetaMLP, Grad-CAM
+  preprocessing.py          Središnji izrez, DullRazor uklanjanje dlačica, dermatoskopski / mobilni cjevovod
+  skin_tone.py              ITA iz 8 perifernih područja, Fitzpatrickova ljestvica
+  gating/                   Provjera je li slika koža (DINOv2 značajke + Mahalanobisov OOD detektor)
+  training/fused.py         Skupovi podataka, BCEJLoss, optimizator, petlja epohe, checkpointi
+scripts/                    CLI ulazne točke (predobrada, podjela, treniranje, dotreniranje, evaluacija)
 web_app/
-  Dockerfile                      # Multi-stage Docker build
-  backend/                        # FastAPI + PyTorch backend
-  frontend/                       # Vue.js + Naive UI frontend
+  Dockerfile                Višestupanjska izgradnja (Vue → Python)
+  backend/                  FastAPI + SSE, isporučeni checkpointi
+  frontend/                 Vue 3 + Naive UI jednostranična aplikacija
+docs/training/              Zapisi treniranja (model_10_6, mobilno dotreniranje)
+tests/                      pytest testovi
 ```
+
+Opis modula nalazi se u [STRUCTURE.hr.md](STRUCTURE.hr.md), a sve CLI zastavice u [USAGE.hr.md](USAGE.hr.md).
 
 ## Brzi početak
 
-### Preduvjeti
-
-- Python 3.10+
-- PyTorch 2.6+
-- [ISIC 2020 trening skup](https://challenge2020.isic-archive.com/)
-
-### Instaliraj ovisnosti
+### Instalacija
 
 ```bash
 pip install -e .
 ```
 
-Instalira `lumen` paket u editable modu sa svim ovisnostima.
+Python 3.10+, PyTorch 2.x. GPU je potreban samo za treniranje.
 
-### 1. Predobrada podataka
-
-```bash
-python scripts/preprocess_dataset.py \
-    --images data/train \
-    --labels data/ISIC_2020_Training_GroundTruth.csv \
-    --duplicates data/2020_Challenge_duplicates.csv \
-    --output preprocessed
-```
-
-Provodi uklanjanje duplikata, uklanjanje dlaka, ITA procjenu Fitzpatrick tona kože, ograničavanje broja slika po pacijentu i trostruko stratificirano k-struko dijeljenje. Izlaz je mapa `preprocessed/` s slikama po foldovima i `metadata.json`.
-
-Bilo koji skup podataka u ISIC 2020 shemi radi (CSV s oznakama mora imati stupce `image_name`, `target`, `patient_id`). Detalji o zastavicama nalaze se u [USAGE.hr.md](USAGE.hr.md).
-
-### 2. Treniranje modela
+### Treniranje dermatoskopskog modela
 
 ```bash
-python scripts/train.py \
-    --data-dir preprocessed \
-    --metadata preprocessed/metadata.json \
-    --output-dir models
+# 1. Predobrada na 448 px s uklanjanjem dlačica (jedan --images po izvornoj mapi)
+python scripts/preprocess_fused_dataset.py \
+    --metadata final_metadata.csv \
+    --images data/2019/ISIC_2019_Training_Input \
+    --images data/2020/train \
+    --images data/MILK10k/MILK10k_Training_Input \
+    --output preprocessed448
+
+# 2. Stratificirana podjela grupirana po pacijentu (dodaje stupac "split")
+python scripts/make_split.py --metadata final_metadata.csv
+
+# 3. Treniranje (AdamW 3e-4, zagrijavanje + kosinus, skupina 64, rano zaustavljanje)
+python scripts/train_fused.py \
+    --metadata final_metadata.csv \
+    --img-dir preprocessed448 \
+    --output-dir runs/fused
 ```
 
-Pokreće augmentaciju, treniranje s prilagođenom loss funkcijom svjesnom pravednosti, k-struku unakrsnu validaciju i spremanje modela. GPU se preporučuje.
-
-**Konfiguracija treniranja:** AdamW optimizator, LR 3e-5, batch 128, do 35 epoha s early stoppingom.
-
-### 3. Pokretanje inferencije
+### Dotreniranje i evaluacija mobilnog modela
 
 ```bash
-python scripts/predict.py \
-    --images putanja/do/slika \
-    --weights models/model_fold_0.pth \
-    --output predictions.csv
+python scripts/eval_mobile.py  --checkpoint runs/fused/checkpoint_<ts>.pt --eval-csv mobile_eval.csv --images data/MILK10k/MILK10k_Training_Input
+python scripts/train_mobile.py --pretrained runs/fused/checkpoint_<ts>.pt --eval-csv mobile_eval.csv --images data/MILK10k/MILK10k_Training_Input --output-dir runs/mobile
 ```
 
-Obrađuje mapu `.jpg` slika kroz isti cjevovod predobrade i ispisuje binarne predikcije (`image_name, target`) u CSV. Podržava paralelnu predobradu.
-
-### 4. Pokretanje web aplikacije
+### Pokretanje web aplikacije
 
 ```bash
-cd web_app
-docker build -t melanoma-detector .
-docker run -p 8000:8000 melanoma-detector
+# kontekst izgradnje je korijen repozitorija
+docker build -f web_app/Dockerfile -t skin-check .
+docker run -p 8000:8000 skin-check
+# otvoriti http://localhost:8000
 ```
 
-Aplikacija automatski preuzima težine modela s Google Drivea pri prvom pokretanju. Pristupa se na `http://localhost:8000`.
+Težine modela isporučuju se u `web_app/backend/`; DINOv2-S se ugrađuje u sliku pri izgradnji. Za postavljanje na Render vidi `render.yaml` (potrebna je instanca s 2 GB memorije).
 
-## Konfiguracija
+### Korištenje iz Pythona
 
-Zadane postavke za treniranje i inferenciju nalaze se u [`configs/default.yaml`](configs/default.yaml):
+```python
+import cv2
+import torch
+from lumen.model_meta import load_fused_model, image_to_tensor, encode_metadata
+from lumen.preprocessing import preprocess_mobile
 
-```yaml
-model:
-  name: "CustomCNN"          # ili "PretrainedEfficientNet"
-  input_size: [224, 224]
-
-training:
-  epochs: 35
-  batch_size: 128
-  learning_rate: 0.00003     # 3e-5
-  optimizer: "adamw"
-  class_weights: [0.5, 8.0]
-  target_ratio: 0.15
-  early_stopping_patience: 5
-  lr_reduction_patience: 2
-  lr_reduction_factor: 0.5
+model, meta_cfg = load_fused_model("web_app/backend/checkpoint_mobile_best.pt", device="cpu")
+rgb = cv2.cvtColor(cv2.imread("lezija.jpg"), cv2.COLOR_BGR2RGB)
+img = image_to_tensor(preprocess_mobile(rgb))
+meta, meta_used = encode_metadata(54, "male", "torso", meta_cfg)  # meta_used govori koja su polja stvarno korištena
+with torch.no_grad():
+    prob = torch.sigmoid(model(img, meta)).item()
+print(f"P(maligno) = {prob:.2f}")
 ```
-
-## Ključne tehničke odluke
-
-- **Prilagođeni CNN umjesto pretreniranog EfficientNeta:** bolja točnost uz manju kompleksnost za ovaj specifičan zadatak
-- **Trostruko stratificirano dijeljenje:** sprječava curenje podataka tako što razdvaja pacijente između foldova
-- **Loss funkcija svjesna pravednosti:** uključuje Equalized Odds Gap regularizaciju, kaznu za recall po klasi i težinu svjesnu augmentacije
-- **Predobrada uklanjanjem dlaka:** morfološki black-hat filter + inpainting za smanjenje šuma od artefakata
-- **ITA procjena tona kože:** računa se iz 8 perifernih podregija kako bi se izbjegao utjecaj lezije
 
 ## Dokumentacija
 
-Cjelovita dokumentacija dostupna je na [project wiki](https://github.com/datice-lumen/Lumen-i-/wiki):
-
-- [Project Documentation](https://github.com/datice-lumen/Lumen-i-/wiki/Project-Documentation) -- metodologija, rezultati, evaluacija pravednosti
-- [Technical Documentation](https://github.com/datice-lumen/Lumen-i-/wiki/Technical-Documentation) -- detalji implementacije, opisi koda, deployment
+- [Dokumentacija projekta](https://github.com/datice1/skin-check/wiki/Dokumentacija-projekta) — motivacija, podaci, arhitektura, funkcija gubitka, eksperimenti, prilagodba mobilnim slikama, web aplikacija, rasprava (hrvatski)
+- [Project Documentation](https://github.com/datice1/skin-check/wiki/Project-Documentation) — isti dokument na engleskom
+- [Technical Documentation](https://github.com/datice1/skin-check/wiki/Technical-Documentation) — organizacija koda, API, naredbe za treniranje, SSE protokol, postavljanje
 
 ## Licenca
 
-Projekt je licenciran pod uvjetima navedenim u [LICENSE](LICENSE) datoteci.
+Vidi [LICENSE](LICENSE).
 
 ## Napomena
 
-Ovaj alat namijenjen je samo u edukativne i istraživačke svrhe. Nije validiran za kliničku upotrebu i ne smije zamijeniti profesionalnu medicinsku dijagnozu.
+Ovo je istraživački i edukativni alat, a ne certificirani medicinski proizvod. Model nije klinički validiran; njegov izlaz je procjena vjerojatnosti, a ne dijagnoza, i ne zamjenjuje pregled kod dermatologa.

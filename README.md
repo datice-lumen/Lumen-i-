@@ -1,158 +1,127 @@
-# Fairness-Driven Melanoma Classification
+# Skin Check — Multimodal Skin Lesion Screening
 
 **🇬🇧 English** | [🇭🇷 Hrvatski](README.hr.md)
 
-A deep CNN approach with equalized skin tone performances, developed for the **Lumen Data Science Challenge 2025**.
+A multimodal deep learning system that estimates the probability that a skin lesion is malignant from a **dermoscopic image or a smartphone photo** plus optional patient context (age, sex, body site), wrapped in a web application that shows every step of its reasoning.
 
-**Authors:** Jurica Jerinic, Filip Hlup, Tomislav Matanovic, Karlo Rastegorac
-**Group:** Datice
+**Authors:** Filip Hlup, Jurica Jerinić, Tomislav Matanović, Karlo Raštegorac
+**Supervisor:** Asst. Prof. Krešimir Križanović, PhD — University of Zagreb, Faculty of Electrical Engineering and Computing
+
+🌐 **Live app:** https://datice-skin-checker.onrender.com/ · 📖 **Full write-up:** [project wiki](https://github.com/datice1/skin-check/wiki)
 
 ## Overview
 
-This project develops a robust deep learning model that classifies dermatoscopic skin lesion images as **benign or malignant**, with a strong emphasis on **fairness across skin tones**. The model is a custom CNN (6.7M parameters) trained from scratch on the [ISIC 2020 dataset](https://challenge2020.isic-archive.com/), incorporating a fairness-aware loss function based on Equalized Odds.
+- **Data.** 67,085 dermoscopic images merged from ISIC 2019, ISIC 2020 and MILK10k (24.6% malignant), with a strict patient-level train/val/test split (10/13, 1/13, 2/13) that was verified to keep every lesion in a single subset.
+- **Model.** A frozen **DINOv2-S** backbone (global context, 384-d) runs in parallel with a small trainable **TinyCNN** (local texture, 192-d); the fused 576-d vector is projected to 256-d and concatenated with a 16-d **MetaMLP** encoding of age, sex and anatomical site. Only 722,513 parameters are trained.
+- **Loss.** `BCE + λ·(soft FPR + w·(1 − soft TPR))` with λ = 0.9, w = 2.5 — a soft, asymmetrically weighted Youden index that penalises a missed malignancy 2.5× more than a false alarm.
+- **Mobile adaptation.** Applied to phone close-ups, the dermoscopic model's sensitivity collapses from 0.912 to 0.559. Disabling hair removal and fine-tuning the heads on MILK10k smartphone images (DINOv2 stays frozen) brings it to 0.925 on an unseen mobile test set.
+- **Web app.** Vue 3 + FastAPI. A single request streams the processing steps over SSE: square crop → hair removal (dermoscopic mode only) → skin-tone estimate (ITA → Fitzpatrick) → prediction → Grad-CAM. A DINOv2-based one-class gate rejects images that are not skin close-ups. Lesion history lives only in the browser; nothing is stored server-side.
 
-| Metric | Test Score |
-|--------|-----------|
-| Accuracy | 0.83 |
-| AUC | 0.86 |
-| TPR (Sensitivity) | 0.69 |
-| FPR | 0.16 |
-| Equalized Odds Gap | 0.51 |
+| Metric | Dermoscopic test (n = 10,326) | Mobile test (n = 836) |
+|---|---:|---:|
+| Sensitivity / TPR | **0.912** | **0.925** |
+| FPR | 0.136 | 0.378 |
+| Accuracy | 0.876 | 0.843 |
+| Precision | 0.687 | 0.869 |
+| F1 | 0.784 | 0.896 |
+| AUC | ≈ 0.94 | 0.844 |
 
-A [live web application](https://lumen-i.onrender.com) is also available for interactive predictions with Grad-CAM explainability.
-
-## Repository Structure
+## Repository structure
 
 ```
-src/lumen/                        # Core Python package (pip install -e .)
-  preprocessing.py                # Hair removal, cropping, resize pipeline
-  skin_tone.py                    # ITA calculation & Fitzpatrick mapping
-  model.py                        # CustomCNN + PretrainedEfficientNet architectures
-  inference.py                    # Tensor prep, prediction, Grad-CAM
-  folding.py                      # Triple-stratified k-fold splitting
-  training/                       # Training-specific modules
-    loss.py                       # Fairness-aware custom loss function
-    augmentation.py               # Data augmentation transforms
-    dataset.py                    # PyTorch Dataset with parallel loading
-    evaluation.py                 # Metrics, fairness evaluation, plotting
-    trainer.py                    # Training loop with early stopping
-
-scripts/                          # CLI entrypoints
-  preprocess_dataset.py           # Batch dataset preprocessing
-  predict.py                      # Batch inference
-  train.py                        # Model training
-
-configs/default.yaml              # Training/inference configuration
+src/lumen/                  Core Python package (pip install -e .)
+  model_meta.py             DINOv2-S + TinyCNN + MetaMLP fused model, Grad-CAM
+  preprocessing.py          Centre crop, DullRazor hair removal, dermoscopic / mobile pipelines
+  skin_tone.py              ITA from 8 peripheral patches, Fitzpatrick mapping
+  gating/                   Skin / not-skin gate (DINOv2 embedding + Mahalanobis OOD detector)
+  training/fused.py         Datasets, BCEJLoss, optimiser, epoch loop, checkpoints
+scripts/                    CLI entry points (preprocess, split, train, fine-tune, evaluate, fit gate)
 web_app/
-  Dockerfile                      # Multi-stage Docker build
-  backend/                        # FastAPI + PyTorch backend
-  frontend/                       # Vue.js + Naive UI frontend
+  Dockerfile                Multi-stage build (Vue → Python runtime)
+  backend/                  FastAPI + SSE endpoint, shipped checkpoints
+  frontend/                 Vue 3 + Naive UI single-page app
+docs/training/              Training run records (model_10_6, mobile fine-tune)
+tests/                      pytest suite
 ```
 
-## Quick Start
+See [STRUCTURE.md](STRUCTURE.md) for a module-by-module description and [USAGE.md](USAGE.md) for every CLI flag.
 
-### Prerequisites
+## Quick start
 
-- Python 3.10+
-- PyTorch 2.6+
-- [ISIC 2020 Training Dataset](https://challenge2020.isic-archive.com/)
-
-### Install Dependencies
+### Install
 
 ```bash
 pip install -e .
 ```
 
-This installs the `lumen` package in editable mode with all dependencies.
+Python 3.10+, PyTorch 2.x. A GPU is only needed for training.
 
-### 1. Preprocess Data
-
-```bash
-python scripts/preprocess_dataset.py \
-    --images data/train \
-    --labels data/ISIC_2020_Training_GroundTruth.csv \
-    --duplicates data/2020_Challenge_duplicates.csv \
-    --output preprocessed
-```
-
-Performs duplicate removal, hair artifact removal, ITA-based Fitzpatrick skin tone estimation, per-patient image capping, and triple-stratified k-fold splitting. Output is a `preprocessed/` folder with per-fold images and a `metadata.json`.
-
-Any dataset matching the ISIC 2020 schema works (label CSV with `image_name`, `target`, `patient_id`). See [USAGE.md](USAGE.md) for full flag documentation.
-
-### 2. Train the Model
+### Train the dermoscopic model
 
 ```bash
-python scripts/train.py \
-    --data-dir preprocessed \
-    --metadata preprocessed/metadata.json \
-    --output-dir models
+# 1. Preprocess to 448 px with hair removal (one --images per source folder)
+python scripts/preprocess_fused_dataset.py \
+    --metadata final_metadata.csv \
+    --images data/2019/ISIC_2019_Training_Input \
+    --images data/2020/train \
+    --images data/MILK10k/MILK10k_Training_Input \
+    --output preprocessed448
+
+# 2. Patient-grouped stratified split (adds a "split" column in place)
+python scripts/make_split.py --metadata final_metadata.csv
+
+# 3. Train (AdamW 3e-4, warm-up + cosine, batch 64, early stopping on val loss)
+python scripts/train_fused.py \
+    --metadata final_metadata.csv \
+    --img-dir preprocessed448 \
+    --output-dir runs/fused
 ```
 
-Handles augmentation, training with the custom fairness-aware loss, k-fold cross-validation, and model saving. GPU recommended.
-
-**Training config:** AdamW optimizer, LR 3e-5, batch size 128, up to 35 epochs with early stopping.
-
-### 3. Run Inference
+### Fine-tune and evaluate the mobile model
 
 ```bash
-python scripts/predict.py \
-    --images path/to/images \
-    --weights models/model_fold_0.pth \
-    --output predictions.csv
+python scripts/eval_mobile.py  --checkpoint runs/fused/checkpoint_<ts>.pt --eval-csv mobile_eval.csv --images data/MILK10k/MILK10k_Training_Input
+python scripts/train_mobile.py --pretrained runs/fused/checkpoint_<ts>.pt --eval-csv mobile_eval.csv --images data/MILK10k/MILK10k_Training_Input --output-dir runs/mobile
 ```
 
-Processes a folder of `.jpg` images through the same preprocessing pipeline and outputs binary predictions (`image_name, target`) to CSV. Supports parallel preprocessing.
-
-### 4. Run the Web App
+### Run the web app
 
 ```bash
-cd web_app
-docker build -t melanoma-detector .
-docker run -p 8000:8000 melanoma-detector
+# build context is the repo root
+docker build -f web_app/Dockerfile -t skin-check .
+docker run -p 8000:8000 skin-check
+# open http://localhost:8000
 ```
 
-The app automatically downloads model weights from Google Drive on first run. Access at `http://localhost:8000`.
+Model weights ship inside `web_app/backend/`; DINOv2-S is baked into the image at build time. For deployment on Render see `render.yaml` (a 2 GB instance is required).
 
-## Configuration
+### Use from Python
 
-Default training and inference settings live in [`configs/default.yaml`](configs/default.yaml):
+```python
+import cv2
+import torch
+from lumen.model_meta import load_fused_model, image_to_tensor, encode_metadata
+from lumen.preprocessing import preprocess_mobile
 
-```yaml
-model:
-  name: "CustomCNN"          # or "PretrainedEfficientNet"
-  input_size: [224, 224]
-
-training:
-  epochs: 35
-  batch_size: 128
-  learning_rate: 0.00003     # 3e-5
-  optimizer: "adamw"
-  class_weights: [0.5, 8.0]
-  target_ratio: 0.15
-  early_stopping_patience: 5
-  lr_reduction_patience: 2
-  lr_reduction_factor: 0.5
+model, meta_cfg = load_fused_model("web_app/backend/checkpoint_mobile_best.pt", device="cpu")
+rgb = cv2.cvtColor(cv2.imread("lesion.jpg"), cv2.COLOR_BGR2RGB)
+img = image_to_tensor(preprocess_mobile(rgb))
+meta, meta_used = encode_metadata(54, "male", "torso", meta_cfg)  # meta_used tells you which fields were actually used
+with torch.no_grad():
+    prob = torch.sigmoid(model(img, meta)).item()
+print(f"P(malignant) = {prob:.2f}")
 ```
-
-## Key Technical Decisions
-
-- **Custom CNN over pretrained EfficientNet:** Better accuracy with lower complexity for this specific task
-- **Triple-stratified folding:** Prevents data leakage by enforcing patient-level separation across folds
-- **Fairness-aware loss function:** Incorporates Equalized Odds Gap regularization, per-class recall penalty, and augmentation-aware weighting
-- **Hair removal preprocessing:** Morphological black-hat filtering + inpainting to reduce artifact noise
-- **ITA-based skin tone estimation:** Computed from 8 peripheral subregions to avoid lesion interference
 
 ## Documentation
 
-Full documentation is available in the [project wiki](https://github.com/datice-lumen/Lumen-i-/wiki):
-
-- [Project Documentation](https://github.com/datice-lumen/Lumen-i-/wiki/Project-Documentation) -- methodology, results, fairness evaluation
-- [Technical Documentation](https://github.com/datice-lumen/Lumen-i-/wiki/Technical-Documentation) -- implementation details, code walkthroughs, deployment
+- [Project Documentation](https://github.com/datice1/skin-check/wiki/Project-Documentation) — motivation, data, architecture, loss, experiments, mobile adaptation, web app, discussion (English)
+- [Dokumentacija projekta](https://github.com/datice1/skin-check/wiki/Dokumentacija-projekta) — the same document in Croatian
+- [Technical Documentation](https://github.com/datice1/skin-check/wiki/Technical-Documentation) — code layout, API, training commands, SSE contract, deployment
 
 ## License
 
-This project is licensed under the terms specified in the [LICENSE](LICENSE) file.
+See [LICENSE](LICENSE).
 
 ## Disclaimer
 
-This tool is intended for educational and research purposes only. It is not validated for clinical use and should not replace professional medical diagnosis.
+This is a research and educational tool, not a certified medical device. The model has not been clinically validated; its output is a probability estimate, not a diagnosis, and does not replace an examination by a dermatologist.

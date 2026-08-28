@@ -15,7 +15,7 @@ The verbatim server originals are preserved in this branch's early commits.
 
 | Item | What it is |
 |------|-----------|
-| [`baseline_eval/`](baseline_eval/) | Evaluation harness for the original LUMEN baseline model across ISIC 2019/2020 + MILK10k, and the comparison tooling used to validate the repo refactor against slavica reference predictions. One-off, superseded by the fused model. |
+| [`baseline_eval/`](baseline_eval/) | Evaluation harness for the original CustomCNN baseline model across ISIC 2019/2020 + MILK10k, and the comparison tooling used to validate the repo refactor against slavica reference predictions. One-off, superseded by the fused model. |
 | [`patches/`](patches/) | Uncommitted working-tree changes recovered from server clones (legacy CustomCNN 224→448 migration — partially superseded, see its README). |
 | `requirements_slavica.txt` | `pip freeze` of the DATICE conda env on slavica (torch 2.6.0+cu124, RTX A6000) — the environment the shipped models were trained in. |
 
