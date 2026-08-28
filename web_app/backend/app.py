@@ -59,6 +59,9 @@ async def load_model() -> None:
 
     try:
         dino = load_dino(device="cpu")
+        # Share the backbone with the skin gate so it doesn't load a second DINOv2.
+        from lumen.gating.dino_embed import set_backbone
+        set_backbone(dino)
     except Exception as e:
         # No backbone -> no models. Leave state empty; endpoint returns a clean error.
         logger.exception("Failed to load DINOv2 backbone: %s", e)

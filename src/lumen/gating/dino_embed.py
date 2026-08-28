@@ -29,8 +29,24 @@ def _transform(pil: Image.Image) -> torch.Tensor:
     return (tensor - _MEAN) / _STD
 
 
+_SHARED_MODEL = None
+
+
+def set_backbone(model) -> None:
+    """Inject an already-loaded frozen DINOv2-S so `embed` reuses it.
+
+    The web app loads one backbone at startup for the classifier; without this the
+    gate would `torch.hub.load` a second, independent copy on the first request,
+    which on a small (1-2 GB) container is enough to get the process OOM-killed.
+    """
+    global _SHARED_MODEL
+    _SHARED_MODEL = model
+
+
 @functools.lru_cache(maxsize=1)
 def _load_model():
+    if _SHARED_MODEL is not None:
+        return _SHARED_MODEL
     # DINOv2 emits harmless "xFormers is not available" warnings when it falls
     # back to plain attention (no xFormers on this CPU-only box). Suppress them
     # locally at model-construction time rather than mutating the global filter.

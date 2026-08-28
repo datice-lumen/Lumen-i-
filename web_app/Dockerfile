@@ -30,9 +30,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libglib2.0-0 libsm6 libxrender1 libxext6 libgl1 \
     && rm -rf /var/lib/apt/lists/*
 
+# Thread/allocator caps: Torch defaults to one OpenMP thread per *host* core (Render
+# exposes far more than the plan's share), and glibc grows one malloc arena per
+# thread — together this alone can push a 2 GB instance into OOM on the first request.
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1
+    PIP_NO_CACHE_DIR=1 \
+    OMP_NUM_THREADS=2 \
+    MKL_NUM_THREADS=2 \
+    MALLOC_ARENA_MAX=2
 
 WORKDIR /app
 
